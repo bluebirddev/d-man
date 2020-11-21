@@ -17,6 +17,10 @@ It is a library to attempt to make life easier by reducing boilerplate introduce
 * Has manually fetching.
 * Exposes native libraries.
 
+# Todo!
+
+Minimize the laundry list of dependencies.
+
 ## Install
 
 ```bash

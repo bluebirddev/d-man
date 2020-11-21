@@ -1,5 +1,5 @@
 {
-  "name": "@bluebird/react-rest-store",
+  "name": "react-rest-store",
   "version": "1.0.0",
   "description": "Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.",
   "author": "vssrcj",

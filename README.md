@@ -25,6 +25,8 @@ npm install --save @bluebird/react-rest-store
 
 ## Simplest Usage
 
+Example [here](https://bluebirddev.github.io/rrs/)
+
 ```tsx
 import React from 'react';
 

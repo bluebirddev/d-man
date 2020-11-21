@@ -21,7 +21,14 @@
     "react-dom": "file:../node_modules/react-dom",
     "react-scripts": "file:../node_modules/react-scripts",
     "typescript": "file:../node_modules/typescript",
-    "react-rest-store": "file:.."
+    "react-rest-store": "file:..",
+    "react-redux": "^7.2.0",
+    "redux": "^4.0.5",
+    "uuid": "^8.3.1",
+    "ramda": "^0.27.1",
+    "axios": "^0.20.0",
+    "reselect": "^4.0.0",
+    "date-fns": "^2.16.1"
   },
   "devDependencies": {
     "@babel/plugin-syntax-object-rest-spread": "^7.8.3"

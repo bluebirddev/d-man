@@ -4,7 +4,7 @@
   "description": "Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.",
   "author": "vssrcj",
   "license": "MIT",
-  "repository": "vssrcj/@bluebird/react-rest-store",
+  "repository": "https://github.com/bluebirddev/rrs",
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
   "source": "src/index.ts",

@@ -9,13 +9,12 @@ const { Provider, domain } = createRrs({
 });
 
 const Todos = () => {
-  const a = domain.useGet('/todos');
+  const { data: todos, loading } = domain.useGet('/todos');
 
-  console.log(a);
-  const { data: todos, loading } = a;
   if (loading) {
     return <div>Loading...</div>
   }
+
   return (
     <table>
       <thead>
@@ -34,12 +33,12 @@ const Todos = () => {
       </tbody>
     </table>
   );
-}
+};
 
 const App = () => (
   <Provider>
     <Todos />
   </Provider>
-)
+);
 
-export default App
+export default App;

@@ -1,7 +1,7 @@
-import { ExampleComponent } from '.'
+import { createRrs } from '.';
 
-describe('ExampleComponent', () => {
-  it('is truthy', () => {
-    expect(ExampleComponent).toBeTruthy()
-  })
-})
+describe('Rrs', () => {
+    it('is truthy', () => {
+        expect(createRrs).toBeTruthy();
+    });
+});

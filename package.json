@@ -7,7 +7,7 @@
   "repository": "vssrcj/@bluebird/react-rest-store",
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
-  "source": "src/index.tsx",
+  "source": "src/index.ts",
   "engines": {
     "node": ">=10"
   },
@@ -24,9 +24,19 @@
     "deploy": "gh-pages -d example/build"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^16.0.0",
+    "react-redux": "^7.2.0",
+    "redux": "^4.0.5",
+    "uuid": "^8.3.1",
+    "ramda": "^0.27.1",
+    "axios": "^0.20.0",
+    "reselect": "^4.0.0",
+    "date-fns": "^2.16.1"
   },
   "devDependencies": {
+    "@types/ramda": "^0.27.29",
+    "@types/react-redux": "^7.1.9",
+    "@types/uuid": "^8.3.0",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^7.2.1",
@@ -55,7 +65,14 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "^3.4.1",
-    "typescript": "^3.7.5"
+    "typescript": "^3.7.5",
+    "react-redux": "^7.2.0",
+    "redux": "^4.0.5",
+    "uuid": "^8.3.1",
+    "ramda": "^0.27.1",
+    "axios": "^0.20.0",
+    "reselect": "^4.0.0",
+    "date-fns": "^2.16.1"
   },
   "files": [
     "dist"

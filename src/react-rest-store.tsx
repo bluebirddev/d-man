@@ -4,7 +4,7 @@ import { Provider } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { createDomain } from './domains';
 import setupStore from './store';
-import { Options, Rrs, Domains, DomainOptions, DomainsOptions } from './types';
+import { Options, Rrs, Domains, DomainOptions, DomainsOptions } from '.';
 
 export function createRrs<T>(options: Options<T>): Rrs<T> {
     const localStorageKey = options.localStorageKey || uuidv4();

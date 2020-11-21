@@ -1,6 +1,6 @@
 {
   "name": "react-rest-store",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.",
   "author": "vssrcj",
   "license": "MIT",
@@ -65,7 +65,14 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "^3.4.1",
-    "typescript": "^3.7.5"
+    "typescript": "^3.7.5",
+    "react-redux": "^7.2.0",
+    "redux": "^4.0.5",
+    "uuid": "^8.3.1",
+    "ramda": "^0.27.1",
+    "axios": "^0.20.0",
+    "reselect": "^4.0.0",
+    "date-fns": "^2.16.1"
   },
   "files": [
     "dist"

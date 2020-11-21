@@ -5,7 +5,7 @@ import getGetHook from './get-get-hook';
 import getPostHook from './get-post-hook';
 import { DomainState, RootState } from '../store/reducer';
 import getDeleteHook from './get-delete-hook';
-import { DomainOptions } from '../types';
+import { DomainOptions } from '..';
 
 export function createDomain(domainName: string, domainOptions: DomainOptions) {
     const api = axios.create({

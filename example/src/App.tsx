@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {createRrs } from '@bluebird/react-rest-store';
+import {createRrs } from 'react-rest-store';
 
 const { Provider, domain } = createRrs({
   domain: {

@@ -1,8 +1,8 @@
-# @bluebird/react-rest-store
+# react-rest-store
 
 > Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.
 
-[![NPM](https://img.shields.io/npm/v/@bluebird/react-rest-store.svg)](https://www.npmjs.com/package/@bluebird/react-rest-store) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![NPM](https://img.shields.io/npm/v/react-rest-store.svg)](https://www.npmjs.com/package/react-rest-store) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## What is this?
 
@@ -24,17 +24,17 @@ Minimize the laundry list of dependencies.
 ## Install
 
 ```bash
-npm install --save @bluebird/react-rest-store
+npm install --save react-rest-store
 ```
 
 ## Simplest Usage
 
-Example [here](https://bluebirddev.github.io/rrs/)
+Example [here](https://bluebirddev.github.io/react-rest-store)
 
 ```tsx
 import React from 'react';
 
-import {createRrs } from '@bluebird/react-rest-store';
+import {createRrs } from 'react-rest-store';
 
 const { Provider, domain } = createRrs({
   domain: {

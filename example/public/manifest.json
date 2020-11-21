@@ -1,6 +1,6 @@
 {
-  "short_name": "@bluebird/react-rest-store",
-  "name": "@bluebird/react-rest-store",
+  "short_name": "react-rest-store",
+  "name": "react-rest-store",
   "icons": [
     {
       "src": "favicon.ico",

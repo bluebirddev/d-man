@@ -85,6 +85,11 @@ export default function getRootReducer(localStorageKey: string) {
 
         if (!name || !url) return state;
 
+        if (name === 'LOCAL') {
+            const path = ['LOCAL', url];
+            return R.assocPath(path, payload, state);
+        }
+
         const path = uuid ? [name, url, method, uuid] : [name, url, method];
 
         const existing = R.path<StoreState>(path, state);

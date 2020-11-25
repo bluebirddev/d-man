@@ -4,7 +4,7 @@ import * as R from 'ramda';
 import { addMilliseconds, fromUnixTime, isBefore } from 'date-fns';
 import { AxiosInstance } from 'axios';
 import { normalizePath, wait } from '../utils';
-import { getDefaultState, StoreState } from '../store/reducer';
+import { getDefaultState, RootState, StoreState } from '../store/reducer';
 
 type Options = {
     /**
@@ -31,7 +31,7 @@ export default function getGetHook(api: AxiosInstance, domainName: string) {
 
         const method = options.customUrl ? options.customUrl[1] : 'get';
 
-        const storeState = useSelector((state: StoreState) =>
+        const storeState = useSelector((state: RootState) =>
             R.path<StoreState>([domainName, domainUrl, method], state)
         );
 

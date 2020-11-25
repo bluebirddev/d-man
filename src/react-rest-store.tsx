@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import * as R from 'ramda';
-import { Provider } from 'react-redux';
+import { Provider, useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { createDomain } from './domains';
 import setupStore from './store';
-import { Options, Rrs, Domains, DomainOptions, DomainsOptions } from '.';
+import {
+    Options,
+    Rrs,
+    Domains,
+    DomainOptions,
+    DomainsOptions,
+    RootState
+} from '.';
 
 export function createRrs<T>(options: Options<T>): Rrs<T> {
     const localStorageKey = options.localStorageKey || uuidv4();
@@ -73,6 +80,26 @@ export function createRrs<T>(options: Options<T>): Rrs<T> {
         return children as JSX.Element;
     };
 
+    function useLocal<X>(localName: string, defaultValue?: X) {
+        const allLocal = useSelector((state: RootState) =>
+            R.path<Record<string, any>>(['LOCAL'], state)
+        );
+
+        function dispatch(value: X) {
+            store.dispatch({ type: `LOCAL|${localName}`, payload: value });
+        }
+
+        React.useEffect(() => {
+            if (defaultValue && (!allLocal || !allLocal[localName])) {
+                dispatch(defaultValue);
+            }
+        }, []);
+
+        const data = (allLocal && allLocal[localName]) || defaultValue;
+
+        return { data, dispatch };
+    }
+
     const RrsProvider = ({ children }: { children: React.ReactNode }) => {
         return (
             <Provider store={store}>
@@ -85,6 +112,7 @@ export function createRrs<T>(options: Options<T>): Rrs<T> {
         domains,
         domain: domains.default,
         logout,
+        useLocal,
         Provider: RrsProvider
     };
 }

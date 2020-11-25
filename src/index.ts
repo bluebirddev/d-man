@@ -53,6 +53,16 @@ export type Rrs<T> = {
      * Required wrapper to allow RRS to work.
      */
     Provider: (props: { children: React.ReactNode }) => JSX.Element;
+    /**
+     * Using local store.
+     */
+    useLocal: <X>(
+        localName: string,
+        defaultValue?: X
+    ) => {
+        data: X;
+        dispatch: (data: X) => void;
+    };
 };
 
 export { createRrs };

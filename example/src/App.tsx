@@ -1,21 +1,29 @@
 import React from 'react';
 
-import {createRrs } from 'react-rest-store';
+import { createRrs } from 'react-rest-store';
 
-const { Provider, domain } = createRrs({
+const { Provider, domain, useLocal } = createRrs({
   domain: {
     baseURL: 'https://jsonplaceholder.typicode.com',
   },
 });
 
+function useCounter() {
+  return useLocal('counter', 0);
+}
+
 const Todos = () => {
   const { data: todos, loading } = domain.useGet('/todos');
+  const { data: counter, dispatch } = useCounter();
 
   if (loading) {
     return <div>Loading...</div>
   }
 
   return (
+    <div>
+      Local counter: {counter}
+      <button type="button" style={{ marginLeft: 10 }} onClick={() => dispatch(counter + 1)}>+1</button>
     <table>
       <thead>
         <tr>
@@ -32,6 +40,7 @@ const Todos = () => {
         ))}
       </tbody>
     </table>
+    </div>
   );
 };
 

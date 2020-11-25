@@ -58,20 +58,24 @@ export default function getRootReducer(localStorageKey: string) {
      * Remove all cached "loading" states.  Maybe should remove all error states as well (forcing
      * refetch on refresh?)
      */
-    const parsedInitialState = R.map<RootState, RootState>(
-        (api) =>
-            R.map(
-                (url) =>
-                    R.map((method) => {
-                        if (method && (method.loading || method.error)) {
-                            return getDefaultState();
-                        }
-                        return method;
-                    }, url),
-                api
-            ),
-        initialState
-    );
+    const parsedInitialState = (() => {
+        delete initialState.LOCAL;
+
+        return R.map<RootState, RootState>(
+            (api) =>
+                R.map(
+                    (url) =>
+                        R.map((method) => {
+                            if (method && (method.loading || method.error)) {
+                                return getDefaultState();
+                            }
+                            return method;
+                        }, url),
+                    api
+                ),
+            initialState
+        );
+    })();
 
     function rootReducer(
         state = parsedInitialState,

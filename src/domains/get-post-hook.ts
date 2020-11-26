@@ -21,7 +21,7 @@ type Options<Req = any, Res = any> = {
         params?: unknown;
         url?: string;
     };
-    parseResponse?: (response: unknown) => Res;
+    parseResponse?: (response: unknown, request: Req) => Res;
 };
 
 export default function getPostGenerator(
@@ -95,7 +95,7 @@ export default function getPostGenerator(
                     );
 
                     const responseData: Res = options.parseResponse
-                        ? options.parseResponse(response.data)
+                        ? options.parseResponse(response.data, payload)
                         : response.data;
 
                     dispatch({

@@ -80,13 +80,14 @@ export function createRrs<T>(options: Options<T>): Rrs<T> {
         return children as JSX.Element;
     };
 
-    function useLocal<X>(localName: string, defaultValue?: X) {
+    function useLocal<X>(localName: string, defaultValue?: X, persist?: true) {
+        const key = `LOCAL${persist ? '-PERSIST' : ''}`;
         const allLocal = useSelector((state: RootState) =>
-            R.path<Record<string, any>>(['LOCAL'], state)
+            R.path<Record<string, any>>([key], state)
         );
 
         function dispatch(value: X) {
-            store.dispatch({ type: `LOCAL|${localName}`, payload: value });
+            store.dispatch({ type: `${key}|${localName}`, payload: value });
         }
 
         React.useEffect(() => {

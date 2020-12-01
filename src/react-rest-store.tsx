@@ -80,7 +80,11 @@ export function createRrs<T>(options: Options<T>): Rrs<T> {
         return children as JSX.Element;
     };
 
-    function useLocal<X>(localName: string, defaultValue?: X, persist?: true) {
+    function useLocal<X>(
+        localName: string,
+        defaultValue?: X,
+        persist?: boolean
+    ) {
         const key = `LOCAL${persist ? '-PERSIST' : ''}`;
         const allLocal = useSelector((state: RootState) =>
             R.path<Record<string, any>>([key], state)

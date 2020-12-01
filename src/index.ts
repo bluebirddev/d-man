@@ -58,7 +58,8 @@ export type Rrs<T> = {
      */
     useLocal: <X>(
         localName: string,
-        defaultValue?: X
+        defaultValue?: X,
+        persist?: boolean
     ) => {
         data: X;
         dispatch: (data: X) => void;

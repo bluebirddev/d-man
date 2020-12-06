@@ -6,6 +6,11 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { getDefaultState, RootState, StoreState } from '../store/reducer';
 import { normalizePath } from '../utils';
 
+type InjectRequest<Req = any> = {
+    location: [string, string];
+    injector: (data: StoreState<any>, request: Req) => unknown;
+};
+
 type Options<Req = any, Res = any> = {
     /**
      * If multiple = false, then there will be only one result for each request per url,
@@ -22,7 +27,23 @@ type Options<Req = any, Res = any> = {
         url?: string;
     };
     parseResponse?: (response: unknown, request: Req) => Res;
+    injectRequest?: InjectRequest;
 };
+
+function useInjectorData(domainName: string, injectRequest?: InjectRequest) {
+    return useSelector((state) =>
+        injectRequest
+            ? R.path<StoreState>(
+                  [
+                      domainName,
+                      normalizePath(injectRequest.location[0]),
+                      injectRequest.location[1]
+                  ],
+                  state
+              )
+            : undefined
+    );
+}
 
 export default function getPostGenerator(
     api: AxiosInstance,
@@ -36,7 +57,7 @@ export default function getPostGenerator(
 
         const basePath = `${domainName}|${normalizedUrl}|post`;
 
-        const { multiple } = options;
+        const { multiple, injectRequest } = options;
 
         const uuid = useMemo(() => uuidv4(), []);
 
@@ -52,6 +73,8 @@ export default function getPostGenerator(
                           state
                       )
             ) || getDefaultState();
+
+        const injectorData = useInjectorData(domainName, injectRequest);
 
         const dispatch = useDispatch();
 
@@ -69,6 +92,24 @@ export default function getPostGenerator(
 
                     const hasParsedData =
                         parsedRequest && R.has('data', parsedRequest);
+
+                    const parsedRequestData = hasParsedData
+                        ? parsedRequest?.data
+                        : payload;
+
+                    if (injectRequest) {
+                        const provisionalData = injectRequest.injector(
+                            injectorData as StoreState,
+                            parsedRequestData
+                        );
+                        dispatch({
+                            type: `${domainName}|${normalizePath(
+                                injectRequest.location[0]
+                            )}|${injectRequest.location[1]}|data`,
+                            payload: provisionalData
+                        });
+                    }
+
                     const hasParsedHeaders =
                         parsedRequest && R.has('headers', parsedRequest);
                     const hasParsedParams =
@@ -90,7 +131,7 @@ export default function getPostGenerator(
 
                     const response = await api.post(
                         apiUrl,
-                        hasParsedData ? parsedRequest?.data : payload,
+                        parsedRequestData,
                         axiosConfig
                     );
 

@@ -6,8 +6,14 @@ import getPostHook from './get-post-hook';
 import { DomainState, RootState } from '../store/reducer';
 import getDeleteHook from './get-delete-hook';
 import { DomainOptions } from '..';
+import { Store } from 'redux';
+import getGet from './get-get';
 
-export function createDomain(domainName: string, domainOptions: DomainOptions) {
+export function createDomain(
+    domainName: string,
+    domainOptions: DomainOptions,
+    store: Store<RootState>
+) {
     const api = axios.create({
         baseURL: domainOptions.baseURL
     });
@@ -15,6 +21,7 @@ export function createDomain(domainName: string, domainOptions: DomainOptions) {
     return {
         usePost: getPostHook(api, domainName),
         useGet: getGetHook(api, domainName),
+        get: getGet(api, domainName, store),
         useDelete: getDeleteHook(api, domainName),
         useSelector: (selector: (state: DomainState) => unknown) =>
             useSelector(

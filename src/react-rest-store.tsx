@@ -27,7 +27,8 @@ export function createRrs<T>(options: Options<T>): Rrs<T> {
             return {
                 default: createDomain(
                     'default',
-                    options.domain as DomainOptions
+                    options.domain as DomainOptions,
+                    store
                 )
             };
         }
@@ -36,7 +37,11 @@ export function createRrs<T>(options: Options<T>): Rrs<T> {
                 const domainOptions = (options.domains as DomainsOptions<T>)[
                     key
                 ];
-                const domain = createDomain(key as string, domainOptions);
+                const domain = createDomain(
+                    key as string,
+                    domainOptions,
+                    store
+                );
                 acc[key] = domain;
                 return acc;
             },

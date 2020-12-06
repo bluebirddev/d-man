@@ -93,6 +93,10 @@ export default function getRootReducer(localStorageKey: string) {
             const path = ['LOCAL', url];
             return R.assocPath(path, payload, state);
         }
+        if (name === 'LOCAL-PERSIST') {
+            const path = ['LOCAL-PERSIST', url];
+            return R.assocPath(path, payload, state);
+        }
 
         const path = uuid ? [name, url, method, uuid] : [name, url, method];
 

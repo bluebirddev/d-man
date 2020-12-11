@@ -177,7 +177,8 @@ export default function getPost(
             /**
              * TODO: since we use getGetHook here -> it can be drastically simplified (because it currently uses same logic as in here^)
              */
-            useHook: () => getPostHook(api, domainName)(normalizedUrl, options),
+            useHook: () =>
+                getPostHook(api, domainName)<Req, Res>(normalizedUrl, options),
             post,
             uuid
         };

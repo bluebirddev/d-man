@@ -74,7 +74,24 @@ export default function getGet(
             /**
              * TODO: since we use getGetHook here -> it can be drastically simplified (because it currently uses same logic as in here^)
              */
-            useHook: () => getGetHook(api, domainName)(url, options),
+            useHook: (hookOptions?: {
+                /**
+                 * Will trigger every interval milliseconds.
+                 */
+                interval?: number;
+                /**
+                 * Will not execute on load.
+                 */
+                lazy?: boolean;
+                /**
+                 * Used if you want to tie this hook to another domain call
+                 */
+                customUrl?: [string, 'get' | 'post' | 'put'];
+            }) =>
+                getGetHook(api, domainName)<Res>(url, {
+                    ...options,
+                    ...hookOptions
+                }),
             fetch,
             reset
         };

@@ -51,7 +51,7 @@ export default function getDelete(
             /**
              * TODO: since we use getGetHook here -> it can be drastically simplified (because it currently uses same logic as in here^)
              */
-            useHook: () => getDeleteHook(api, domainName)(url),
+            useHook: () => getDeleteHook(api, domainName)<Res>(url),
             delete: deleteFunc
         };
     };

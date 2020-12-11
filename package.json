@@ -1,6 +1,6 @@
 {
-  "name": "react-rest-store",
-  "version": "1.0.13",
+  "name": "d-man",
+  "version": "0.0.14",
   "description": "Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.",
   "author": "vssrcj",
   "license": "MIT",

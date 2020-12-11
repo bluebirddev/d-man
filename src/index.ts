@@ -1,6 +1,6 @@
 import { createDomain } from './domains';
 import { RootState, DomainState, StoreState } from './store/reducer';
-import { createRrs } from './react-rest-store';
+import { createDMan } from './d-man';
 
 export { RootState, DomainState, StoreState };
 
@@ -36,7 +36,7 @@ export type Domain = ReturnType<typeof createDomain>;
 
 export type Domains<T> = Record<keyof T | 'default', Domain>;
 
-export type Rrs<T> = {
+export type DMan<T> = {
     /**
      * Record that matches the "domains" object you passed in.
      */
@@ -66,4 +66,4 @@ export type Rrs<T> = {
     };
 };
 
-export { createRrs };
+export { createDMan };

@@ -6,14 +6,14 @@ import { createDomain } from './domains';
 import setupStore from './store';
 import {
     Options,
-    Rrs,
+    DMan,
     Domains,
     DomainOptions,
     DomainsOptions,
     RootState
 } from '.';
 
-export function createRrs<T>(options: Options<T>): Rrs<T> {
+export function createDMan<T>(options: Options<T>): DMan<T> {
     const localStorageKey = options.localStorageKey || uuidv4();
 
     const store = setupStore(localStorageKey);

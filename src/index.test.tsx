@@ -1,7 +1,7 @@
-import { createRrs } from '.';
+import { createDMan } from '.';
 
-describe('Rrs', () => {
+describe('d-man', () => {
     it('is truthy', () => {
-        expect(createRrs).toBeTruthy();
+        expect(createDMan).toBeTruthy();
     });
 });

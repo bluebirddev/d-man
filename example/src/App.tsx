@@ -1,8 +1,8 @@
 import React from 'react';
 
-import { createRrs } from 'react-rest-store';
+import { createDMan } from 'd-man';
 
-const { Provider, domain, useLocal } = createRrs({
+const { Provider, domain, useLocal } = createDMan({
   domain: {
     baseURL: 'https://jsonplaceholder.typicode.com',
   },

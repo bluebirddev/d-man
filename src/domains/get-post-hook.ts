@@ -79,7 +79,7 @@ export default function getPostGenerator(
         const dispatch = useDispatch();
 
         const post: (
-            payload: Req
+            payload?: Req
         ) => Promise<[string | undefined, Res | undefined]> = useCallback(
             async (payload: Req) => {
                 try {

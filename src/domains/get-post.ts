@@ -1,10 +1,11 @@
 import { useCallback, useMemo } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import * as R from 'ramda';
 import { v4 as uuidv4 } from 'uuid';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { getDefaultState, RootState, StoreState } from '../store/reducer';
 import { normalizePath } from '../utils';
+import { Store } from 'redux';
+import getPostHook from './get-post-hook';
 
 type InjectRequest<Req = any> = {
     location: [string, string];
@@ -30,27 +31,35 @@ type Options<Req = any, Res = any> = {
     injectRequest?: InjectRequest;
 };
 
-function useInjectorData(domainName: string, injectRequest?: InjectRequest) {
-    return useSelector((state) =>
-        injectRequest
-            ? R.path<StoreState>(
-                  [
-                      domainName,
-                      normalizePath(injectRequest.location[0]),
-                      injectRequest.location[1]
-                  ],
-                  state
-              )
-            : undefined
-    );
+function getInjectorData(
+    store: Store<RootState>,
+    domainName: string,
+    injectRequest?: InjectRequest
+) {
+    return injectRequest
+        ? R.path<StoreState>(
+              [
+                  domainName,
+                  normalizePath(injectRequest.location[0]),
+                  injectRequest.location[1]
+              ],
+              store.getState()
+          )
+        : undefined;
 }
 
-export default function getPostHook(api: AxiosInstance, domainName: string) {
+export default function getPost(
+    api: AxiosInstance,
+    domainName: string,
+    store: Store<RootState>
+) {
     return function usePost<Req, Res>(
         u: string,
         options: Options<Req, Res> = {}
     ) {
         const normalizedUrl = normalizePath(u);
+
+        const { dispatch } = store;
 
         const basePath = `${domainName}|${normalizedUrl}|post`;
 
@@ -58,22 +67,26 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
 
         const uuid = useMemo(() => uuidv4(), []);
 
-        const storeState =
-            useSelector((state: RootState) =>
-                multiple
-                    ? R.path<StoreState>(
-                          [domainName, normalizedUrl, 'post', uuid],
-                          state
-                      )
-                    : R.path<StoreState>(
-                          [domainName, normalizedUrl, 'post'],
-                          state
-                      )
-            ) || getDefaultState();
+        const getStoreState = () => {
+            const storeState = multiple
+                ? R.path<StoreState>(
+                      [domainName, normalizedUrl, 'post', uuid],
+                      store.getState()
+                  )
+                : R.path<StoreState>(
+                      [domainName, normalizedUrl, 'post'],
+                      store.getState()
+                  );
 
-        const injectorData = useInjectorData(domainName, injectRequest);
+            const validStoreState = storeState || getDefaultState();
 
-        const dispatch = useDispatch();
+            const data = (validStoreState?.data as Res) || undefined;
+
+            return {
+                ...validStoreState,
+                data
+            };
+        };
 
         const post: (
             payload?: Req
@@ -83,6 +96,12 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
                     dispatch({
                         type: `${basePath}|loading${multiple ? `|${uuid}` : ''}`
                     });
+
+                    const injectorData = getInjectorData(
+                        store,
+                        domainName,
+                        injectRequest
+                    );
 
                     const parsedRequest =
                         options.parseRequest && options.parseRequest(payload);
@@ -154,8 +173,11 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
         );
 
         return {
-            ...storeState,
-            data: storeState.data ? (storeState.data as Res) : undefined,
+            getStoreState,
+            /**
+             * TODO: since we use getGetHook here -> it can be drastically simplified (because it currently uses same logic as in here^)
+             */
+            useHook: () => getPostHook(api, domainName)(normalizedUrl, options),
             post,
             uuid
         };

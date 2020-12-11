@@ -8,6 +8,8 @@ import getDeleteHook from './get-delete-hook';
 import { DomainOptions } from '..';
 import { Store } from 'redux';
 import getGet from './get-get';
+import getDelete from './get-delete';
+import getPost from './get-post';
 
 export function createDomain(
     domainName: string,
@@ -20,9 +22,11 @@ export function createDomain(
 
     return {
         usePost: getPostHook(api, domainName),
+        post: getPost(api, domainName, store),
         useGet: getGetHook(api, domainName),
         get: getGet(api, domainName, store),
         useDelete: getDeleteHook(api, domainName),
+        delete: getDelete(api, domainName, store),
         useSelector: (selector: (state: DomainState) => unknown) =>
             useSelector(
                 createSelector(

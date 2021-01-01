@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import * as R from 'ramda';
 import { normalizePath } from '../utils';
 import { getDefaultState, RootState, StoreState } from '../store/reducer';
@@ -33,7 +32,7 @@ export default function getDelete(
             };
         };
 
-        const deleteFunc = useCallback(async () => {
+        const execute = async () => {
             try {
                 dispatch({ type: `${basePath}|loading` });
                 const response = await api.delete(normalizedUrl);
@@ -44,7 +43,7 @@ export default function getDelete(
                     payload: error.toString()
                 });
             }
-        }, [basePath, dispatch, normalizedUrl]);
+        };
 
         return {
             getState: getStoreState,
@@ -52,7 +51,7 @@ export default function getDelete(
              * TODO: since we use getGetHook here -> it can be drastically simplified (because it currently uses same logic as in here^)
              */
             useHook: () => getDeleteHook(api, domainName)<Res>(url),
-            delete: deleteFunc
+            execute
         };
     };
 }

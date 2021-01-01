@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from 'react';
 import * as R from 'ramda';
 import { v4 as uuidv4 } from 'uuid';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -20,14 +19,14 @@ type Options<Req = any, Res = any> = {
      */
     multiple?: boolean;
     parseRequest?: (
-        request: Req
+        request?: Req
     ) => {
         data?: unknown;
         headers?: unknown;
         params?: unknown;
         url?: string;
     };
-    parseResponse?: (response: unknown, request: Req) => Res;
+    parseResponse?: (response: unknown, request?: Req) => Res;
     injectRequest?: InjectRequest;
 };
 
@@ -53,10 +52,7 @@ export default function getPost(
     domainName: string,
     store: Store<RootState>
 ) {
-    return function usePost<Req, Res>(
-        u: string,
-        options: Options<Req, Res> = {}
-    ) {
+    return function post<Req, Res>(u: string, options: Options<Req, Res> = {}) {
         const normalizedUrl = normalizePath(u);
 
         const { dispatch } = store;
@@ -65,7 +61,7 @@ export default function getPost(
 
         const { multiple, injectRequest } = options;
 
-        const uuid = useMemo(() => uuidv4(), []);
+        const uuid = uuidv4();
 
         const getStoreState = () => {
             const storeState = multiple
@@ -88,89 +84,86 @@ export default function getPost(
             };
         };
 
-        const post: (
+        async function postSubmit(
             payload?: Req
-        ) => Promise<[string | undefined, Res | undefined]> = useCallback(
-            async (payload: Req) => {
-                try {
-                    dispatch({
-                        type: `${basePath}|loading${multiple ? `|${uuid}` : ''}`
-                    });
+        ): Promise<[string | undefined, Res | undefined]> {
+            try {
+                dispatch({
+                    type: `${basePath}|loading${multiple ? `|${uuid}` : ''}`
+                });
 
-                    const injectorData = getInjectorData(
-                        store,
-                        domainName,
-                        injectRequest
+                const injectorData = getInjectorData(
+                    store,
+                    domainName,
+                    injectRequest
+                );
+
+                const parsedRequest =
+                    options.parseRequest && options.parseRequest(payload);
+
+                const hasParsedData =
+                    parsedRequest && R.has('data', parsedRequest);
+
+                const parsedRequestData = hasParsedData
+                    ? parsedRequest?.data
+                    : payload;
+
+                if (injectRequest) {
+                    const provisionalData = injectRequest.injector(
+                        injectorData as StoreState,
+                        parsedRequestData
                     );
-
-                    const parsedRequest =
-                        options.parseRequest && options.parseRequest(payload);
-
-                    const hasParsedData =
-                        parsedRequest && R.has('data', parsedRequest);
-
-                    const parsedRequestData = hasParsedData
-                        ? parsedRequest?.data
-                        : payload;
-
-                    if (injectRequest) {
-                        const provisionalData = injectRequest.injector(
-                            injectorData as StoreState,
-                            parsedRequestData
-                        );
-                        dispatch({
-                            type: `${domainName}|${normalizePath(
-                                injectRequest.location[0]
-                            )}|${injectRequest.location[1]}|data`,
-                            payload: provisionalData
-                        });
-                    }
-
-                    const hasParsedHeaders =
-                        parsedRequest && R.has('headers', parsedRequest);
-                    const hasParsedParams =
-                        parsedRequest && R.has('params', parsedRequest);
-                    const hasParsedUrl =
-                        parsedRequest && R.has('url', parsedRequest);
-
-                    const axiosConfig: AxiosRequestConfig = {};
-                    if (hasParsedHeaders) {
-                        axiosConfig.headers = parsedRequest?.headers;
-                    }
-                    if (hasParsedParams) {
-                        axiosConfig.params = parsedRequest?.params;
-                    }
-
-                    const apiUrl = hasParsedUrl
-                        ? (parsedRequest?.url as string)
-                        : normalizedUrl;
-
-                    const response = await api.post(
-                        apiUrl,
-                        parsedRequestData,
-                        axiosConfig
-                    );
-
-                    const responseData: Res = options.parseResponse
-                        ? options.parseResponse(response.data, payload)
-                        : response.data;
-
                     dispatch({
-                        type: `${basePath}|data${multiple ? `|${uuid}` : ''}`,
-                        payload: responseData
+                        type: `${domainName}|${normalizePath(
+                            injectRequest.location[0]
+                        )}|${injectRequest.location[1]}|data`,
+                        payload: provisionalData
                     });
-
-                    return [undefined, responseData];
-                } catch (error) {
-                    dispatch({
-                        type: `${basePath}|error${multiple ? `|${uuid}` : ''}`,
-                        payload: error.toString()
-                    });
-                    return [error, undefined];
                 }
-            },
-            [basePath, dispatch, multiple, normalizedUrl, options, uuid]
-        );
+
+                const hasParsedHeaders =
+                    parsedRequest && R.has('headers', parsedRequest);
+                const hasParsedParams =
+                    parsedRequest && R.has('params', parsedRequest);
+                const hasParsedUrl =
+                    parsedRequest && R.has('url', parsedRequest);
+
+                const axiosConfig: AxiosRequestConfig = {};
+                if (hasParsedHeaders) {
+                    axiosConfig.headers = parsedRequest?.headers;
+                }
+                if (hasParsedParams) {
+                    axiosConfig.params = parsedRequest?.params;
+                }
+
+                const apiUrl = hasParsedUrl
+                    ? (parsedRequest?.url as string)
+                    : normalizedUrl;
+
+                const response = await api.post(
+                    apiUrl,
+                    parsedRequestData,
+                    axiosConfig
+                );
+
+                const responseData: Res = options.parseResponse
+                    ? options.parseResponse(response.data, payload)
+                    : response.data;
+
+                dispatch({
+                    type: `${basePath}|data${multiple ? `|${uuid}` : ''}`,
+                    payload: responseData
+                });
+
+                return [undefined, responseData];
+            } catch (error) {
+                dispatch({
+                    type: `${basePath}|error${multiple ? `|${uuid}` : ''}`,
+                    payload: error.toString()
+                });
+                return [error, undefined];
+            }
+        }
 
         return {
             getStoreState,
@@ -179,7 +172,7 @@ export default function getPost(
              */
             useHook: () =>
                 getPostHook(api, domainName)<Req, Res>(normalizedUrl, options),
-            post,
+            execute: postSubmit,
             uuid
         };
     };

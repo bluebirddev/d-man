@@ -60,21 +60,28 @@ export default function getRootReducer(localStorageKey: string) {
      */
     const parsedInitialState = (() => {
         delete initialState.LOCAL;
+        const { 'LOCAL-PERSIST': localPersist, ...domainsState } = initialState;
 
-        return R.map<RootState, RootState>(
-            (api) =>
-                R.map(
-                    (url) =>
-                        R.map((method) => {
-                            if (method && (method.loading || method.error)) {
-                                return getDefaultState();
-                            }
-                            return method;
-                        }, url),
-                    api
-                ),
-            initialState
-        );
+        return {
+            'LOCAL-PERSIST': localPersist,
+            ...R.map<RootState, RootState>(
+                (api) =>
+                    R.map(
+                        (url) =>
+                            R.map((method) => {
+                                if (
+                                    method &&
+                                    (method.loading || method.error)
+                                ) {
+                                    return getDefaultState();
+                                }
+                                return method;
+                            }, url),
+                        api
+                    ),
+                domainsState
+            )
+        };
     })();
 
     function rootReducer(
@@ -89,12 +96,8 @@ export default function getRootReducer(localStorageKey: string) {
 
         if (!name || !url) return state;
 
-        if (name === 'LOCAL') {
-            const path = ['LOCAL', url];
-            return R.assocPath(path, payload, state);
-        }
-        if (name === 'LOCAL-PERSIST') {
-            const path = ['LOCAL-PERSIST', url];
+        if (name === 'LOCAL' || name === 'LOCAL-PERSIST') {
+            const path = [name, url];
             return R.assocPath(path, payload, state);
         }
 

@@ -18,7 +18,7 @@ export default function getDeleteHook(api: AxiosInstance, domainName: string) {
 
         const dispatch = useDispatch();
 
-        const deleteFunc = useCallback(async () => {
+        const execute = useCallback(async () => {
             try {
                 dispatch({ type: `${basePath}|loading` });
                 const response = await api.delete(normalizedUrl);
@@ -34,7 +34,7 @@ export default function getDeleteHook(api: AxiosInstance, domainName: string) {
         return {
             ...storeState,
             data: storeState.data ? (storeState.data as Res) : undefined,
-            delete: deleteFunc
+            execute
         };
     };
 }

@@ -6,9 +6,13 @@ import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { getDefaultState, RootState, StoreState } from '../store/reducer';
 import { normalizePath } from '../utils';
 
-type InjectRequest<Req = any> = {
+type ResponseInjector<Res = any> = {
     location: [string, string];
-    injector: (data: StoreState<any>, request: Req) => unknown;
+    injector: (data: StoreState<any>, response: Res) => unknown;
+};
+type RequestInjector = {
+    location: [string, string];
+    injector: (data: StoreState<any>, request: unknown) => unknown;
 };
 
 type Options<Req = any, Res = any> = {
@@ -27,17 +31,21 @@ type Options<Req = any, Res = any> = {
         url?: string;
     };
     parseResponse?: (response: unknown, request: Req) => Res;
-    injectRequest?: InjectRequest;
+    injectRequest?: RequestInjector;
+    injectResponse?: ResponseInjector<Res>;
 };
 
-function useInjectorData(domainName: string, injectRequest?: InjectRequest) {
+function useInjectorData(
+    domainName: string,
+    injector?: RequestInjector | ResponseInjector
+) {
     return useSelector((state) =>
-        injectRequest
+        injector
             ? R.path<StoreState>(
                   [
                       domainName,
-                      normalizePath(injectRequest.location[0]),
-                      injectRequest.location[1]
+                      normalizePath(injector.location[0]),
+                      injector.location[1]
                   ],
                   state
               )
@@ -54,7 +62,7 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
 
         const basePath = `${domainName}|${normalizedUrl}|post`;
 
-        const { multiple, injectRequest } = options;
+        const { multiple, injectRequest, injectResponse } = options;
 
         const uuid = useMemo(() => uuidv4(), []);
 
@@ -71,11 +79,15 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
                       )
             ) || getDefaultState();
 
-        const injectorData = useInjectorData(domainName, injectRequest);
+        const requestInjectorData = useInjectorData(domainName, injectRequest);
+        const responseInjectorData = useInjectorData(
+            domainName,
+            injectResponse
+        );
 
         const dispatch = useDispatch();
 
-        const post: (
+        const execute: (
             payload?: Req
         ) => Promise<[string | undefined, Res | undefined]> = useCallback(
             async (payload: Req) => {
@@ -96,7 +108,7 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
 
                     if (injectRequest) {
                         const provisionalData = injectRequest.injector(
-                            injectorData as StoreState,
+                            requestInjectorData as StoreState,
                             parsedRequestData
                         );
                         dispatch({
@@ -136,6 +148,19 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
                         ? options.parseResponse(response.data, payload)
                         : response.data;
 
+                    if (injectResponse) {
+                        const provisionalData = injectResponse.injector(
+                            responseInjectorData as StoreState,
+                            responseData
+                        );
+                        dispatch({
+                            type: `${domainName}|${normalizePath(
+                                injectResponse.location[0]
+                            )}|${injectResponse.location[1]}|data`,
+                            payload: provisionalData
+                        });
+                    }
+
                     dispatch({
                         type: `${basePath}|data${multiple ? `|${uuid}` : ''}`,
                         payload: responseData
@@ -156,7 +181,7 @@ export default function getPostHook(api: AxiosInstance, domainName: string) {
         return {
             ...storeState,
             data: storeState.data ? (storeState.data as Res) : undefined,
-            post,
+            execute,
             uuid
         };
     };

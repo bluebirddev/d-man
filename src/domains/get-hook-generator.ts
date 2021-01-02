@@ -2,32 +2,26 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { addMilliseconds, fromUnixTime, isBefore } from 'date-fns';
 import { AxiosInstance } from 'axios';
-import { wait } from '../utils';
+import { parseStoreState, wait } from '../utils';
 import { RootState } from '../store/reducer';
-import getGet, { GetOptions, parseStoreState } from './get-get';
 import { Store } from 'redux';
+import { GetHookOptions, GetOptions } from '..';
+import getGenerator from './get-generator';
 
-type GetHookOptions<Res = any, Req = any> = GetOptions<Res, Req> & {
-    /**
-     * Will trigger every interval milliseconds.
-     */
-    interval?: number;
-    /**
-     * Will not execute on load.
-     */
-    lazy?: boolean;
-};
-
-export default function getGetHook(
+export default function getHookGenerator(
     domainApi: AxiosInstance,
     domain: string,
     store: Store<RootState>
 ) {
     return function useGet<Res = any, Req = any>(
         url: string,
-        options: GetHookOptions<Res, Req> = {}
+        options: GetHookOptions & GetOptions<Res, Req> = {}
     ) {
-        const get = getGet(domainApi, domain, store)(url, options);
+        const get = getGenerator(
+            domainApi,
+            domain,
+            store
+        )<Res, Req>(url, options);
 
         const storeState = useSelector(get.selector);
 
@@ -92,7 +86,11 @@ export default function getGetHook(
             }
         }, [checkInterval, storeState]);
 
-        const validStoreState = parseStoreState<Res>(storeState, options.lazy);
+        const validStoreState = parseStoreState<Res>(
+            storeState,
+            options.parseResponseData,
+            options.lazy
+        );
 
         return {
             ...get,

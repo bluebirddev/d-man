@@ -88,7 +88,7 @@ export default function getRootReducer(localStorageKey: string) {
         state = parsedInitialState,
         { type, payload }: { type: string; payload?: any }
     ): RootState {
-        const [name, url, method, action, uuid] = type.split('|');
+        const [name, url, method, uuid, _action] = type.split('|');
 
         if (name === 'LOGOUT') {
             return {};
@@ -100,6 +100,11 @@ export default function getRootReducer(localStorageKey: string) {
             const path = [name, url];
             return R.assocPath(path, payload, state);
         }
+
+        /**
+         * Action is the last non-empty value.
+         */
+        const action = _action || uuid;
 
         const path = uuid ? [name, url, method, uuid] : [name, url, method];
 

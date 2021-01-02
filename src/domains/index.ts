@@ -1,52 +1,55 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { createSelector } from 'reselect';
 import { useSelector } from 'react-redux';
-import getGetHook from './get-get-hook';
-import getPostHook from './get-post-hook';
 import { DomainState, RootState } from '../store/reducer';
-import getDeleteHook from './get-delete-hook';
 import { DomainOptions } from '..';
 import { Store } from 'redux';
-import getGet from './get-get';
-import getDelete from './get-delete';
-import getPost from './get-post';
+import postGenerator from './post-generator';
+import postHookGenerator from './post-hook-generator';
+import getGenerator from './get-generator';
+import getHookGenerator from './get-hook-generator';
+import deleteGenerator from './delete-generator';
+import deleteHookGenerator from './delete-hook-generator';
 
 export function createDomain(
-    domainName: string,
+    domain: string,
     domainOptions: DomainOptions,
     store: Store<RootState>
 ) {
-    const api = axios.create({
+    const domainApi = axios.create({
         baseURL: domainOptions.baseURL
     });
 
     return {
-        usePost: getPostHook(api, domainName),
-        post: getPost(api, domainName, store),
-        useGet: getGetHook(api, domainName),
-        get: getGet(api, domainName, store),
-        useDelete: getDeleteHook(api, domainName),
-        delete: getDelete(api, domainName, store),
+        post: postGenerator(domainApi, domain, store),
+        usePost: postHookGenerator(domainApi, domain, store),
+
+        get: getGenerator(domainApi, domain, store),
+        useGet: getHookGenerator(domainApi, domain, store),
+
+        delete: deleteGenerator(domainApi, domain, store),
+        useDelete: deleteHookGenerator(domainApi, domain, store),
+
         useSelector: (selector: (state: DomainState) => unknown) =>
             useSelector(
-                createSelector(
-                    (state: RootState) => state[domainName],
-                    selector
-                )
+                createSelector((state: RootState) => state[domain], selector)
             ),
-        api,
+
+        api: domainApi,
+
         addErrorInterceptor: (
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             errorInterceptor: (error: any) => unknown
         ) => {
-            api.interceptors.response.use((req) => req, errorInterceptor);
+            domainApi.interceptors.response.use((req) => req, errorInterceptor);
         },
+
         addRequestInterceptor: (
             requestInterceptor: (
                 request: AxiosRequestConfig
             ) => AxiosRequestConfig | Promise<AxiosRequestConfig>
         ) => {
-            api.interceptors.request.use(requestInterceptor);
+            domainApi.interceptors.request.use(requestInterceptor);
         }
     };
 }

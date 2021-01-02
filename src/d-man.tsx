@@ -10,7 +10,8 @@ import {
     Domains,
     DomainOptions,
     DomainsOptions,
-    RootState
+    RootState,
+    UseLocalResponse
 } from '.';
 
 export function createDMan<T>(options: Options<T>): DMan<T> {
@@ -85,7 +86,15 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         return children as JSX.Element;
     };
 
-    function local<X>(localName: string, defaultValue?: X, persist?: boolean) {
+    function local<X>(
+        localName: string,
+        defaultValue?: X,
+        persist?: boolean
+    ): {
+        getData: () => X;
+        useHook: UseLocalResponse<X>;
+        dispatch: (data: X) => void;
+    } {
         const key = `LOCAL${persist ? '-PERSIST' : ''}`;
 
         const allSelector = (state: RootState) => {
@@ -105,18 +114,33 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
             return selector(store.getState());
         }
 
-        return { getData, selector, dispatch, allSelector };
+        return {
+            getData,
+            dispatch,
+            useHook: useLocal<X>(localName, defaultValue, persist)
+        };
     }
 
     function useLocal<X>(
         localName: string,
         defaultValue?: X,
         persist?: boolean
-    ) {
+    ): UseLocalResponse<X> {
+        const key = `LOCAL${persist ? '-PERSIST' : ''}`;
+
+        const allSelector = (state: RootState) => {
+            return R.path<Record<string, any>>([key], state);
+        };
+
+        const selector = (state: RootState) => {
+            const allLocalData = allSelector(state);
+            return (allLocalData && allLocalData[localName]) || defaultValue;
+        };
+
         const _local = local(localName, defaultValue, persist);
 
-        const allData = useSelector(_local.allSelector);
-        const data = useSelector(_local.selector);
+        const allData = useSelector(allSelector);
+        const data = useSelector(selector);
 
         React.useEffect(() => {
             if (defaultValue && (!allData || !allData[localName])) {

@@ -36,6 +36,11 @@ export type Domain = ReturnType<typeof createDomain>;
 
 export type Domains<T> = Record<keyof T | 'default', Domain>;
 
+export type UseLocalResponse<X> = {
+    data: X;
+    dispatch: (data: X) => void;
+};
+
 export type DMan<T> = {
     /**
      * Record that matches the "domains" object you passed in.
@@ -60,16 +65,17 @@ export type DMan<T> = {
         localName: string,
         defaultValue?: X,
         persist?: boolean
-    ) => {
-        data: X;
-        dispatch: (data: X) => void;
-    };
+    ) => UseLocalResponse<X>;
+    /**
+     * Local store.
+     */
     local: <X>(
         localName: string,
         defaultValue?: X,
         persist?: boolean
     ) => {
         getData: () => X;
+        useHook: UseLocalResponse<X>;
         dispatch: (data: X) => void;
     };
 };

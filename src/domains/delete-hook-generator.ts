@@ -31,8 +31,7 @@ export default function deleteHookGenerator(
         return {
             ...del,
             ...storeState,
-            ...validStoreState,
-            data: validStoreState.data
+            ...validStoreState
         };
     };
 }

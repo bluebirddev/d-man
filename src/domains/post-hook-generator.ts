@@ -31,8 +31,7 @@ export default function postHookGenerator(
         return {
             ...post,
             ...storeState,
-            ...validStoreState,
-            data: validStoreState.data
+            ...validStoreState
         };
     };
 }

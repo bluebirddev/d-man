@@ -75,13 +75,17 @@ export function parseError(error: any) {
 export function parseStoreState<Res>(
     storeState: StoreState<unknown> | undefined,
     lazy = true
-) {
+): StoreState<Res> {
     const validStoreState = storeState || getDefaultState();
 
     const data = (validStoreState?.data as Res) || undefined;
 
     return {
-        ...validStoreState,
+        ...storeState,
+        error: storeState?.error || undefined,
+        lastUpdated: storeState?.lastUpdated || undefined,
+        executed: !lazy && !storeState ? true : validStoreState.executed,
+        success: storeState?.success || undefined,
         data,
         /**
          * If it is "not lazy", that means it should load on demand.  If no store state yet - fake an initial loading.

@@ -91,7 +91,6 @@ export default function getHookGenerator(
         return {
             ...get,
             ...validStoreState,
-            data: validStoreState.data,
             reset
         };
     };

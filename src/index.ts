@@ -64,6 +64,14 @@ export type DMan<T> = {
         data: X;
         dispatch: (data: X) => void;
     };
+    local: <X>(
+        localName: string,
+        defaultValue?: X,
+        persist?: boolean
+    ) => {
+        getData: () => X;
+        dispatch: (data: X) => void;
+    };
 };
 
 export type Method = 'get' | 'post' | 'put' | 'delete';

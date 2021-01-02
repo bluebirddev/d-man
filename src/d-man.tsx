@@ -85,29 +85,46 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         return children as JSX.Element;
     };
 
-    function useLocal<X>(
-        localName: string,
-        defaultValue?: X,
-        persist?: boolean
-    ) {
+    function local<X>(localName: string, defaultValue?: X, persist?: boolean) {
         const key = `LOCAL${persist ? '-PERSIST' : ''}`;
-        const allLocal = useSelector((state: RootState) =>
-            R.path<Record<string, any>>([key], state)
-        );
+
+        const allSelector = (state: RootState) => {
+            return R.path<Record<string, any>>([key], state);
+        };
+
+        const selector = (state: RootState) => {
+            const allLocalData = allSelector(state);
+            return (allLocalData && allLocalData[localName]) || defaultValue;
+        };
 
         function dispatch(value: X) {
             store.dispatch({ type: `${key}|${localName}`, payload: value });
         }
 
+        function getData() {
+            return selector(store.getState());
+        }
+
+        return { getData, selector, dispatch, allSelector };
+    }
+
+    function useLocal<X>(
+        localName: string,
+        defaultValue?: X,
+        persist?: boolean
+    ) {
+        const _local = local(localName, defaultValue, persist);
+
+        const allData = useSelector(_local.allSelector);
+        const data = useSelector(_local.selector);
+
         React.useEffect(() => {
-            if (defaultValue && (!allLocal || !allLocal[localName])) {
-                dispatch(defaultValue);
+            if (defaultValue && (!allData || !allData[localName])) {
+                _local.dispatch(defaultValue);
             }
         }, []);
 
-        const data = (allLocal && allLocal[localName]) || defaultValue;
-
-        return { data, dispatch };
+        return { ..._local, data };
     }
 
     const RrsProvider = ({ children }: { children: React.ReactNode }) => {
@@ -123,6 +140,7 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         domain: domains.default,
         logout,
         useLocal,
+        local,
         Provider: RrsProvider
     };
 }

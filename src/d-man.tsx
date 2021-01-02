@@ -92,7 +92,7 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         persist?: boolean
     ): {
         getData: () => X;
-        useHook: UseLocalResponse<X>;
+        useHook: () => UseLocalResponse<X>;
         dispatch: (data: X) => void;
     } {
         const key = `LOCAL${persist ? '-PERSIST' : ''}`;
@@ -117,7 +117,7 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         return {
             getData,
             dispatch,
-            useHook: useLocal<X>(localName, defaultValue, persist)
+            useHook: () => useLocal<X>(localName, defaultValue, persist)
         };
     }
 

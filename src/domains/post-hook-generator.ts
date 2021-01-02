@@ -26,10 +26,7 @@ export default function postHookGenerator(
             R.path<StoreState>(post.location, state)
         );
 
-        const validStoreState = parseStoreState<Res>(
-            storeState,
-            options.parseResponseData
-        );
+        const validStoreState = parseStoreState<Res>(storeState);
 
         return {
             ...post,

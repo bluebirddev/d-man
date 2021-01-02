@@ -26,10 +26,7 @@ export default function deleteHookGenerator(
             R.path<StoreState>(del.location, state)
         );
 
-        const validStoreState = parseStoreState<Res>(
-            storeState,
-            options.parseResponseData
-        );
+        const validStoreState = parseStoreState<Res>(storeState);
 
         return {
             ...del,

@@ -3,7 +3,6 @@ import {
     LocationOptions,
     Location,
     Method,
-    ParseResponseData,
     StoreState
 } from '.';
 import { getDefaultState } from './store/reducer';
@@ -54,12 +53,15 @@ export function parseLocation(
         ].filter((l) => l);
     })();
 
-    return [
+    const location = [
         normalizePath(domain),
         normalizePath(url),
-        method as Method,
-        multiple as string
-    ];
+        method as Method
+    ] as Location;
+    if (multiple) {
+        return [...location, multiple as string] as Location;
+    }
+    return location;
 }
 
 export function parseError(error: any) {
@@ -72,14 +74,11 @@ export function parseError(error: any) {
 
 export function parseStoreState<Res>(
     storeState: StoreState<unknown> | undefined,
-    parseResponseData?: ParseResponseData<Res>,
     lazy = true
 ) {
     const validStoreState = storeState || getDefaultState();
 
-    const data = parseResponseData
-        ? parseResponseData(validStoreState?.data)
-        : (validStoreState?.data as Res) || undefined;
+    const data = (validStoreState?.data as Res) || undefined;
 
     return {
         ...validStoreState,

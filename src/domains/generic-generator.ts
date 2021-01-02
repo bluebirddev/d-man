@@ -23,20 +23,18 @@ export default function genericGenerator<Req = any, Res = any>(
 
     const selector = (state: RootState) => R.path<StoreState>(location, state);
 
-    const getStoreState = parseStoreState<Res>(
-        selector(store.getState()),
-        options.parseResponseData
-    );
+    const getStoreState = () =>
+        parseStoreState<Res>(selector(store.getState()));
 
     const reset = () => {
-        dispatch({ type: location });
+        dispatch({ type: location.join('|') });
     };
 
     const execute = async (
         data?: Req
     ): Promise<[string | undefined, Res | undefined]> => {
         try {
-            dispatch({ type: `${location}|loading` });
+            dispatch({ type: `${location.join('|')}|loading` });
 
             const parsedRequest =
                 options.parseRequest && options.parseRequest(data);
@@ -64,7 +62,7 @@ export default function genericGenerator<Req = any, Res = any>(
                         const injectorSelector = (state: RootState) =>
                             R.path<StoreState>(injectLocation, state);
 
-                        const injectorStoreState = parseStoreState(
+                        const injectorStoreState = parseStoreState<Res>(
                             injectorSelector(store.getState())
                         );
 
@@ -76,7 +74,7 @@ export default function genericGenerator<Req = any, Res = any>(
                             : parsedRequestData;
 
                         dispatch({
-                            type: `${location}|data`,
+                            type: `${location.join('|')}|data`,
                             payload: injectorData
                         });
                     }
@@ -112,7 +110,7 @@ export default function genericGenerator<Req = any, Res = any>(
                         const injectorSelector = (state: RootState) =>
                             R.path<StoreState>(injectLocation, state);
 
-                        const injectorStoreState = parseStoreState(
+                        const injectorStoreState = parseStoreState<Res>(
                             injectorSelector(store.getState())
                         );
 
@@ -125,7 +123,7 @@ export default function genericGenerator<Req = any, Res = any>(
                             : response.data;
 
                         dispatch({
-                            type: `${location}|data`,
+                            type: `${location.join('|')}|data`,
                             payload: injectorPayload
                         });
                     }
@@ -133,17 +131,20 @@ export default function genericGenerator<Req = any, Res = any>(
             }
 
             const responseData: Res = options.parseResponseData
-                ? options.parseResponseData(response.data, parsedRequestData)
+                ? options.parseResponseData(response.data, data)
                 : response.data;
 
-            dispatch({ type: `${location}|data`, payload: responseData });
+            dispatch({
+                type: `${location.join('|')}|data`,
+                payload: responseData
+            });
 
             return [undefined, responseData];
         } catch (_error) {
             const error = parseError(_error);
 
             dispatch({
-                type: `${location}|error`,
+                type: `${location.join('|')}|error`,
                 payload: error
             });
 

@@ -32,7 +32,7 @@ export default function getHookGenerator(
         const mounted = useRef(false);
 
         const reset = useCallback(() => {
-            dispatch({ type: get.location });
+            dispatch({ type: get.location.join('|') });
         }, [get.location, dispatch]);
 
         useEffect(() => {
@@ -86,11 +86,7 @@ export default function getHookGenerator(
             }
         }, [checkInterval, storeState]);
 
-        const validStoreState = parseStoreState<Res>(
-            storeState,
-            options.parseResponseData,
-            options.lazy
-        );
+        const validStoreState = parseStoreState<Res>(storeState, options.lazy);
 
         return {
             ...get,

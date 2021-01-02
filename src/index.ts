@@ -75,7 +75,7 @@ export type DMan<T> = {
         persist?: boolean
     ) => {
         getData: () => X;
-        useHook: UseLocalResponse<X>;
+        useHook: () => UseLocalResponse<X>;
         dispatch: (data: X) => void;
     };
 };
@@ -121,9 +121,9 @@ export type InjectResponse = LocationOptions & {
     ) => unknown;
 };
 
-export type ParseResponseData<Res> = (
+export type ParseResponseData<Req, Res> = (
     responseData: unknown,
-    requestData?: unknown
+    requestData?: Req
 ) => Res;
 
 export type ParseRequest<Req> = (
@@ -136,7 +136,7 @@ export type ParseRequest<Req> = (
 };
 
 export type BaseOptions<Req, Res> = LocationOptions & {
-    parseResponseData?: ParseResponseData<Res>;
+    parseResponseData?: ParseResponseData<Req, Res>;
     parseRequest?: ParseRequest<Req>;
     injectResponse?: InjectResponse[];
     injectRequest?: InjectRequest[];

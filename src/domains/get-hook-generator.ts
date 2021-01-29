@@ -9,8 +9,6 @@ import { Store } from 'redux';
 import { GetHookResult, GetHookOptions, GetOptions } from '..';
 import getGenerator from './get-generator';
 
-let SENT = false;
-
 export default function getHookGenerator(
     domainApi: AxiosInstance,
     domain: string,
@@ -84,9 +82,7 @@ export default function getHookGenerator(
          * If mounted, and not lazy -> refresh
          */
         useEffect(() => {
-            if (!options.lazy && !storeState?.executed && !SENT) {
-                SENT = true;
-                console.log('execute!');
+            if (!options.lazy && !storeState?.executed) {
                 get.execute();
             }
         }, [options.lazy, get.execute, storeState]);
@@ -100,10 +96,6 @@ export default function getHookGenerator(
                 checkInterval();
             }
         }, [checkInterval, storeState]);
-
-        console.log({ options });
-
-        console.log({ validStoreState });
 
         return {
             ...get,

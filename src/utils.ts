@@ -81,8 +81,6 @@ export function parseStoreState<Res>(
 
     const data = (validStoreState?.data as Res) || undefined;
 
-    console.log({ storeState, lazy, loading: !lazy && !storeState });
-
     return {
         ...storeState,
         error: storeState?.error || undefined,

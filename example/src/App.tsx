@@ -17,12 +17,9 @@ function useDummyPost() {
 }
 
 const Todos = () => {
-  const x = domain.useGet('/todos');
-  const { data: todos, loading }  = x;
+  const { data: todos, loading, execute: refreshTodos } = domain.useGet('/todos');
   const { data: counter, dispatch } = useCounter();
   const dummyPost = useDummyPost();
-
-  console.log({ dummyPost, x })
 
   if (loading) {
     return <div>Loading...</div>
@@ -34,6 +31,7 @@ const Todos = () => {
       <button type="button" style={{ marginLeft: 10 }} onClick={() => dispatch(counter + 1)}>+1</button>
       <hr />
       <button type="button" onClick={() => dummyPost.execute()}>Execute dummy post</button>
+      <button type="button" onClick={() => refreshTodos()}>Refresh data</button>
     <table>
       <thead>
         <tr>

@@ -2,7 +2,6 @@ import {
     DefaultLocationOptions,
     LocationOptions,
     Location,
-    Method,
     StoreState
 } from '.';
 import { getDefaultState } from './store/reducer';
@@ -26,10 +25,12 @@ export function parseLocation(
 ): Location | undefined {
     if (!allowEmpty) {
         if (
-            !customLocation.location ||
-            (!customLocation.url &&
-                !customLocation.method &&
-                !customLocation.domain)
+            !customLocation.location &&
+            !(
+                customLocation.url ||
+                customLocation.method ||
+                customLocation.domain
+            )
         ) {
             console.warn(
                 'You must specify either "location" or one of "url", "method", or "domain"'
@@ -37,29 +38,29 @@ export function parseLocation(
             return undefined;
         }
     }
-    const [domain, url, method, multiple] = (() => {
-        if (customLocation.location)
-            return [
-                customLocation.location[0],
-                customLocation.location[1],
-                customLocation.location[2],
-                customLocation.location[3]
-            ].filter((l) => l);
-        return [
+    const [domain, url, method, uuid] = ((): Location => {
+        if (customLocation.location) return customLocation.location;
+        const location: Location = [
             customLocation.domain || defaultLocation.domain,
             customLocation.url || defaultLocation.url,
-            customLocation.method || defaultLocation.method,
-            customLocation.multiple || defaultLocation.multiple
-        ].filter((l) => l);
+            customLocation.method || defaultLocation.method
+        ];
+        const _uuid = (customLocation.uuid || defaultLocation.uuid) as
+            | string
+            | undefined;
+        if (_uuid) {
+            return [...location, _uuid] as Location;
+        }
+        return location;
     })();
 
-    const location = [
+    const location: Location = [
         normalizePath(domain),
         normalizePath(url),
-        method as Method
-    ] as Location;
-    if (multiple) {
-        return [...location, multiple as string] as Location;
+        method
+    ];
+    if (uuid) {
+        return [...location, uuid] as Location;
     }
     return location;
 }
@@ -79,6 +80,8 @@ export function parseStoreState<Res>(
     const validStoreState = storeState || getDefaultState();
 
     const data = (validStoreState?.data as Res) || undefined;
+
+    console.log({ storeState, lazy, loading: !lazy && !storeState });
 
     return {
         ...storeState,

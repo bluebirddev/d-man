@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { v4 as uuidv4 } from 'uuid';
 import { addMilliseconds, fromUnixTime, isBefore } from 'date-fns';
 import { AxiosInstance } from 'axios';
 import { parseStoreState, wait } from '../utils';
 import { RootState } from '../store/reducer';
 import { Store } from 'redux';
-import { GetHookOptions, GetOptions } from '..';
+import { GetHookResult, GetHookOptions, GetOptions } from '..';
 import getGenerator from './get-generator';
+
+let SENT = false;
 
 export default function getHookGenerator(
     domainApi: AxiosInstance,
@@ -16,14 +19,24 @@ export default function getHookGenerator(
     return function useGet<Res = any, Req = any>(
         url: string,
         options: GetHookOptions & GetOptions<Res, Req> = {}
-    ) {
+    ): GetHookResult<Req, Res> {
+        const uuid = useMemo(() => {
+            return options.multiple ? uuidv4() : undefined;
+        }, []);
+
         const get = getGenerator(
             domainApi,
             domain,
-            store
+            store,
+            uuid
         )<Res, Req>(url, options);
 
         const storeState = useSelector(get.selector);
+
+        const validStoreState = parseStoreState<Res>(
+            storeState,
+            options.lazy === true
+        );
 
         const { dispatch } = store;
 
@@ -71,7 +84,9 @@ export default function getHookGenerator(
          * If mounted, and not lazy -> refresh
          */
         useEffect(() => {
-            if (!options.lazy && !storeState?.executed) {
+            if (!options.lazy && !storeState?.executed && !SENT) {
+                SENT = true;
+                console.log('execute!');
                 get.execute();
             }
         }, [options.lazy, get.execute, storeState]);
@@ -86,7 +101,9 @@ export default function getHookGenerator(
             }
         }, [checkInterval, storeState]);
 
-        const validStoreState = parseStoreState<Res>(storeState, options.lazy);
+        console.log({ options });
+
+        console.log({ validStoreState });
 
         return {
             ...get,

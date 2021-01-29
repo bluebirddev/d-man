@@ -10,6 +10,8 @@ import getGenerator from './get-generator';
 import getHookGenerator from './get-hook-generator';
 import deleteGenerator from './delete-generator';
 import deleteHookGenerator from './delete-hook-generator';
+import putGenerator from './put-generator';
+import putHookGenerator from './put-hook-generator';
 
 export function createDomain(
     domain: string,
@@ -23,6 +25,9 @@ export function createDomain(
     return {
         post: postGenerator(domainApi, domain, store),
         usePost: postHookGenerator(domainApi, domain, store),
+
+        put: putGenerator(domainApi, domain, store),
+        usePut: putHookGenerator(domainApi, domain, store),
 
         get: getGenerator(domainApi, domain, store),
         useGet: getHookGenerator(domainApi, domain, store),

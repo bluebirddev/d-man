@@ -3,23 +3,28 @@ import { v4 as uuidv4 } from 'uuid';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { RootState, StoreState } from '../store/reducer';
 import { Store } from 'redux';
-import { DefaultLocationOptions, Location, BaseOptions } from '..';
-import { parseError, parseLocation, parseStoreState } from '../utils';
+import {
+    DefaultLocationOptions,
+    Location,
+    BaseOptions,
+    GenericGeneratorResult
+} from '..';
+import { parseError, parseLocation, parseStoreState, wait } from '../utils';
 
 export default function genericGenerator<Req = any, Res = any>(
     domainApi: AxiosInstance,
     store: Store<RootState>,
     _location: DefaultLocationOptions,
-    options: BaseOptions<Req, Res> = {}
-) {
+    options: BaseOptions<Req, Res> = {},
+    _uuid: string | undefined
+): GenericGeneratorResult<Req, Res> {
     const { dispatch } = store;
 
-    const uuid = options.multiple ? uuidv4() : undefined;
+    // This cannot be generated on each render.  If it comes from a hook, it should only generate once.
+    // TODO: find a better way to do this.
+    const uuid = options.multiple ? _uuid || uuidv4() : undefined;
 
-    const location = parseLocation(
-        { ..._location, multiple: uuid },
-        options
-    ) as Location;
+    const location = parseLocation({ ..._location, uuid }, options) as Location;
 
     const selector = (state: RootState) => R.path<StoreState>(location, state);
 
@@ -37,7 +42,7 @@ export default function genericGenerator<Req = any, Res = any>(
             dispatch({ type: `${location.join('|')}|loading` });
 
             const parsedRequest =
-                options.parseRequest && options.parseRequest(data);
+                options.parseRequest && options.parseRequest(data as Req);
 
             const hasParsedRequestData =
                 parsedRequest && R.has('data', parsedRequest);
@@ -74,7 +79,7 @@ export default function genericGenerator<Req = any, Res = any>(
                             : parsedRequestData;
 
                         dispatch({
-                            type: `${location.join('|')}|data`,
+                            type: `${injectLocation.join('|')}|data`,
                             payload: injectorData
                         });
                     }
@@ -93,11 +98,18 @@ export default function genericGenerator<Req = any, Res = any>(
 
             axiosConfig.url = hasParsedUrl
                 ? (parsedRequest?.url as string)
-                : location[1];
+                : _location.url;
 
             axiosConfig.data = parsedRequestData;
 
-            const response = await domainApi.request(axiosConfig);
+            const _responseData = await (async () => {
+                if (options.fake) {
+                    await wait(options.fake);
+                    return undefined;
+                }
+                const response = await domainApi.request(axiosConfig);
+                return response.data;
+            })();
 
             if (options.injectResponse) {
                 options.injectResponse.forEach((request) => {
@@ -117,13 +129,13 @@ export default function genericGenerator<Req = any, Res = any>(
                         const injectorPayload = request.parseResponse
                             ? request.parseResponse(
                                   injectorStoreState,
-                                  response.data,
+                                  _responseData,
                                   parsedRequestData
                               )
-                            : response.data;
+                            : _responseData;
 
                         dispatch({
-                            type: `${location.join('|')}|data`,
+                            type: `${injectLocation.join('|')}|data`,
                             payload: injectorPayload
                         });
                     }
@@ -131,8 +143,12 @@ export default function genericGenerator<Req = any, Res = any>(
             }
 
             const responseData: Res = options.parseResponseData
-                ? options.parseResponseData(response.data, data)
-                : response.data;
+                ? options.parseResponseData(_responseData, data)
+                : _responseData;
+
+            if (options.onSuccess) {
+                await options.onSuccess(responseData, data);
+            }
 
             dispatch({
                 type: `${location.join('|')}|data`,

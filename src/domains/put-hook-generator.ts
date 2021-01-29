@@ -1,42 +1,42 @@
 import { useSelector } from 'react-redux';
 import * as R from 'ramda';
-import { v4 as uuidv4 } from 'uuid';
-import { parseStoreState } from '../utils';
-import { RootState, StoreState } from '../store/reducer';
 import { AxiosInstance } from 'axios';
-import deleteGenerator from './delete-generator';
+import { v4 as uuidv4 } from 'uuid';
+import { RootState, StoreState } from '../store/reducer';
+import { parseStoreState } from '../utils';
+import { PutHookOptions, PutOptions, PutHookResult } from '..';
 import { Store } from 'redux';
-import { DeleteOptions, DeleteHookResult } from '..';
+import putGenerator from './put-generator';
 import { useMemo } from 'react';
 
-export default function deleteHookGenerator(
+export default function putHookGenerator(
     domainApi: AxiosInstance,
     domain: string,
     store: Store<RootState>
 ) {
-    return function useDelete<Res = any, Req = any>(
+    return function usePut<Req, Res>(
         url: string,
-        options: DeleteOptions<Res, Req> = {}
-    ): DeleteHookResult<Req, Res> {
+        options: PutHookOptions & PutOptions<Req, Res> = {}
+    ): PutHookResult<Req, Res> {
         const uuid = useMemo(() => {
             return options.multiple ? uuidv4() : undefined;
         }, []);
 
-        const del = deleteGenerator(
+        const put = putGenerator(
             domainApi,
             domain,
             store,
             uuid
-        )<Res, Req>(url, options);
+        )<Req, Res>(url, options);
 
         const storeState = useSelector((state: RootState) =>
-            R.path<StoreState>(del.location, state)
+            R.path<StoreState>(put.location, state)
         );
 
         const validStoreState = parseStoreState<Res>(storeState);
 
         return {
-            ...del,
+            ...put,
             ...storeState,
             ...validStoreState
         };

@@ -103,7 +103,9 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
 
         const selector = (state: RootState) => {
             const allLocalData = allSelector(state);
-            return (allLocalData && allLocalData[localName]) || defaultValue;
+            return allLocalData && R.has(localName, allLocalData)
+                ? allLocalData[localName]
+                : defaultValue;
         };
 
         function dispatch(value: X) {
@@ -134,7 +136,9 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
 
         const selector = (state: RootState) => {
             const allLocalData = allSelector(state);
-            return (allLocalData && allLocalData[localName]) || defaultValue;
+            return allLocalData && R.has(localName, allLocalData)
+                ? allLocalData[localName]
+                : defaultValue;
         };
 
         const _local = local(localName, defaultValue, persist);
@@ -143,7 +147,7 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         const data = useSelector(selector);
 
         React.useEffect(() => {
-            if (defaultValue && (!allData || !allData[localName])) {
+            if (defaultValue && (!allData || !R.has(localName, allData))) {
                 _local.dispatch(defaultValue);
             }
         }, []);

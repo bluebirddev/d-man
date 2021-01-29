@@ -12,9 +12,17 @@ function useCounter() {
   return useLocal('counter', 0);
 }
 
+function useDummyPost() {
+  return domain.usePost('/dummy', { fake: 10000, multiple: true });
+}
+
 const Todos = () => {
-  const { data: todos, loading } = domain.useGet('/todos');
+  const x = domain.useGet('/todos');
+  const { data: todos, loading }  = x;
   const { data: counter, dispatch } = useCounter();
+  const dummyPost = useDummyPost();
+
+  console.log({ dummyPost, x })
 
   if (loading) {
     return <div>Loading...</div>
@@ -24,6 +32,8 @@ const Todos = () => {
     <div>
       Local counter: {counter}
       <button type="button" style={{ marginLeft: 10 }} onClick={() => dispatch(counter + 1)}>+1</button>
+      <hr />
+      <button type="button" onClick={() => dummyPost.execute()}>Execute dummy post</button>
     <table>
       <thead>
         <tr>

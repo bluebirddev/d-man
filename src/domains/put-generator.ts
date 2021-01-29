@@ -1,27 +1,27 @@
-import { RootState } from '../store/reducer';
 import { AxiosInstance } from 'axios';
+import { RootState } from '../store/reducer';
 import { Store } from 'redux';
-import { DeleteHookOptions, DeleteOptions, DeleteResult } from '..';
 import genericGenerator from './generic-generator';
-import deleteHookGenerator from './delete-hook-generator';
+import { PutHookOptions, PutOptions, PutResult } from '..';
+import putHookGenerator from './put-hook-generator';
 
-export default function deleteGenerator(
+export default function putGenerator(
     domainApi: AxiosInstance,
     domain: string,
     store: Store<RootState>,
     uuid: string | undefined = undefined
 ) {
-    return function del<Res = any, Req = any>(
+    return function put<Req, Res>(
         url: string,
-        options: DeleteOptions<Res, Req> = {}
-    ): DeleteResult<Req, Res> {
+        options: PutOptions<Req, Res> = {}
+    ): PutResult<Req, Res> {
         const generic = genericGenerator<Req, Res>(
             domainApi,
             store,
             {
                 url,
                 domain,
-                method: 'delete'
+                method: 'put'
             },
             options,
             uuid
@@ -29,12 +29,12 @@ export default function deleteGenerator(
 
         return {
             ...generic,
-            useHook: (hookOptions?: DeleteHookOptions) =>
-                deleteHookGenerator(
+            useHook: (hookOptions?: PutHookOptions) =>
+                putHookGenerator(
                     domainApi,
                     domain,
                     store
-                )<Res, Req>(url, {
+                )<Req, Res>(url, {
                     ...options,
                     ...hookOptions
                 })

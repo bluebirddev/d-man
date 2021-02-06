@@ -1,5 +1,5 @@
 import { getUnixTime } from 'date-fns';
-import * as R from 'ramda';
+import { assocPath, map, path as getPath } from '../utils';
 
 export type StoreState<T = unknown> = {
     data: T | undefined;
@@ -64,11 +64,11 @@ export default function getRootReducer(localStorageKey: string) {
 
         return {
             'LOCAL-PERSIST': localPersist,
-            ...R.map<RootState, RootState>(
+            ...map(
                 (api) =>
-                    R.map(
+                    map(
                         (url) =>
-                            R.map((method) => {
+                            map((method) => {
                                 if (
                                     method &&
                                     (method.loading || method.error)
@@ -98,7 +98,7 @@ export default function getRootReducer(localStorageKey: string) {
 
         if (name === 'LOCAL' || name === 'LOCAL-PERSIST') {
             const path = [name, url];
-            return R.assocPath(path, payload, state);
+            return assocPath(path, payload, state);
         }
 
         /**
@@ -109,9 +109,9 @@ export default function getRootReducer(localStorageKey: string) {
 
         const path = uuid ? [name, url, method, uuid] : [name, url, method];
 
-        const existing = R.path<StoreState>(path, state);
+        const existing = getPath<StoreState>(path, state);
 
-        const setState = (props: unknown) => R.assocPath(path, props, state);
+        const setState = (props: unknown) => assocPath(path, props, state);
 
         if (action === 'data') {
             const props = {

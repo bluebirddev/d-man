@@ -1,10 +1,11 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { RootState } from '../store/reducer';
+import { RootState, StoreState } from './store/reducer';
 import { Store } from 'redux';
-import { GetHookOptions, GetOptions, GetResult } from '..';
-import genericGenerator from './generic-generator';
-import getHookGenerator from './get-hook-generator';
 import { path as getPath } from './utils';
+
+const a = {
+    bla: 'string'
+};
 
 type ResponseTransformer<Res> = {
     (data: any, axiosResponse?: AxiosResponse): Res;
@@ -46,10 +47,12 @@ function generateUseGet(props: Props, globalConfig: GlobalConfig) {
             globalConfig.domain || config?.path?.domain,
             action || config?.path?.url,
             'get' || config?.path?.method
-        ];
+        ] as [string, string, string];
 
-        const selector = (state: RootState) =>
-            getPath<StoreState>(location, state);
+        const selector = (state: RootState) => getPath<StoreState>(path, state);
+
+        const getStoreState = () =>
+            parseStoreState<Res>(selector(store.getState()));
 
         async function execute() {
             const response = await axios({
@@ -66,46 +69,10 @@ function generateUseGet(props: Props, globalConfig: GlobalConfig) {
         }
 
         return {
-            execute
+            execute,
+            selector
         };
     }
 
     return useGet;
-}
-
-export default function getGenerator(
-    domainApi: AxiosInstance,
-    domain: string,
-    store: Store<RootState>,
-    uuid: string | undefined = undefined
-) {
-    return function get<Res = any, Req = any>(
-        url: string,
-        options: GetOptions<Res, Req> = {}
-    ): GetResult<Req, Res> {
-        const generic = genericGenerator<Req, Res>(
-            domainApi,
-            store,
-            {
-                url,
-                domain,
-                method: 'get'
-            },
-            options,
-            uuid
-        );
-
-        return {
-            ...generic,
-            useHook: (hookOptions?: GetHookOptions) =>
-                getHookGenerator(
-                    domainApi,
-                    domain,
-                    store
-                )<Res, Req>(url, {
-                    ...options,
-                    ...hookOptions
-                })
-        };
-    };
 }

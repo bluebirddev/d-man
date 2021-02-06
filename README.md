@@ -24,12 +24,12 @@ Minimize the laundry list of dependencies.
 ## Install
 
 ```bash
-npm install --save react-rest-store
+npm install --save d-man
 ```
 
 ## Simplest Usage
 
-Example [here](https://bluebirddev.github.io/react-rest-store)
+Example [here](https://bluebirddev.github.io/d-man)
 
 ```tsx
 import React from 'react';

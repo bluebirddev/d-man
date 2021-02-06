@@ -2,7 +2,6 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { createSelector } from 'reselect';
 import { useSelector } from 'react-redux';
 import { DomainState, RootState } from '../store/reducer';
-import { DomainOptions } from '..';
 import { Store } from 'redux';
 import postGenerator from './post-generator';
 import postHookGenerator from './post-hook-generator';
@@ -12,6 +11,7 @@ import deleteGenerator from './delete-generator';
 import deleteHookGenerator from './delete-hook-generator';
 import putGenerator from './put-generator';
 import putHookGenerator from './put-hook-generator';
+import { DomainOptions } from '../d-man';
 
 export function createDomain(
     domain: string,

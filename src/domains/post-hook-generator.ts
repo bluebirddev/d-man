@@ -1,9 +1,8 @@
 import { useSelector } from 'react-redux';
-import * as R from 'ramda';
 import { AxiosInstance } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { RootState, StoreState } from '../store/reducer';
-import { parseStoreState } from '../utils';
+import { parseStoreState, path } from '../utils';
 import { PostOptions, PostHookOptions, PostHookResult } from '..';
 import { Store } from 'redux';
 import postGenerator from './post-generator';
@@ -30,7 +29,7 @@ export default function postHookGenerator(
         )<Req, Res>(url, options);
 
         const storeState = useSelector((state: RootState) =>
-            R.path<StoreState>(post.location, state)
+            path<StoreState>(post.location, state)
         );
 
         const validStoreState = parseStoreState<Res>(storeState);

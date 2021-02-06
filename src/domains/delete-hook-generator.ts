@@ -1,7 +1,6 @@
 import { useSelector } from 'react-redux';
-import * as R from 'ramda';
 import { v4 as uuidv4 } from 'uuid';
-import { parseStoreState } from '../utils';
+import { parseStoreState, path } from '../utils';
 import { RootState, StoreState } from '../store/reducer';
 import { AxiosInstance } from 'axios';
 import deleteGenerator from './delete-generator';
@@ -30,7 +29,7 @@ export default function deleteHookGenerator(
         )<Res, Req>(url, options);
 
         const storeState = useSelector((state: RootState) =>
-            R.path<StoreState>(del.location, state)
+            path<StoreState>(del.location, state)
         );
 
         const validStoreState = parseStoreState<Res>(storeState);

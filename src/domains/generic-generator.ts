@@ -1,4 +1,3 @@
-import * as R from 'ramda';
 import { v4 as uuidv4 } from 'uuid';
 import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { RootState, StoreState } from '../store/reducer';
@@ -9,7 +8,14 @@ import {
     BaseOptions,
     GenericGeneratorResult
 } from '..';
-import { parseError, parseLocation, parseStoreState, wait } from '../utils';
+import {
+    has,
+    parseError,
+    parseLocation,
+    parseStoreState,
+    path,
+    wait
+} from '../utils';
 
 export default function genericGenerator<Req = any, Res = any>(
     domainApi: AxiosInstance,
@@ -26,7 +32,7 @@ export default function genericGenerator<Req = any, Res = any>(
 
     const location = parseLocation({ ..._location, uuid }, options) as Location;
 
-    const selector = (state: RootState) => R.path<StoreState>(location, state);
+    const selector = (state: RootState) => path<StoreState>(location, state);
 
     const getStoreState = () =>
         parseStoreState<Res>(selector(store.getState()));
@@ -45,12 +51,12 @@ export default function genericGenerator<Req = any, Res = any>(
                 options.parseRequest && options.parseRequest(data as Req);
 
             const hasParsedRequestData =
-                parsedRequest && R.has('data', parsedRequest);
+                parsedRequest && has('data', parsedRequest);
             const hasParsedHeaders =
-                parsedRequest && R.has('headers', parsedRequest);
+                parsedRequest && has('headers', parsedRequest);
             const hasParsedParams =
-                parsedRequest && R.has('params', parsedRequest);
-            const hasParsedUrl = parsedRequest && R.has('url', parsedRequest);
+                parsedRequest && has('params', parsedRequest);
+            const hasParsedUrl = parsedRequest && has('url', parsedRequest);
 
             const parsedRequestData = hasParsedRequestData
                 ? parsedRequest?.data
@@ -65,7 +71,7 @@ export default function genericGenerator<Req = any, Res = any>(
                     );
                     if (injectLocation) {
                         const injectorSelector = (state: RootState) =>
-                            R.path<StoreState>(injectLocation, state);
+                            path<StoreState>(injectLocation, state);
 
                         const injectorStoreState = parseStoreState<Res>(
                             injectorSelector(store.getState())
@@ -120,7 +126,7 @@ export default function genericGenerator<Req = any, Res = any>(
                     );
                     if (injectLocation) {
                         const injectorSelector = (state: RootState) =>
-                            R.path<StoreState>(injectLocation, state);
+                            path<StoreState>(injectLocation, state);
 
                         const injectorStoreState = parseStoreState<Res>(
                             injectorSelector(store.getState())

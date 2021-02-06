@@ -1,3 +1,4 @@
+import { assocPath as _assocPath } from 'ramda';
 import {
     DefaultLocationOptions,
     LocationOptions,
@@ -94,3 +95,26 @@ export function parseStoreState<Res>(
         loading: !lazy && !storeState ? true : validStoreState.loading
     };
 }
+
+export function path<T>(keys: string[], obj: unknown): T {
+    if (!obj || !keys || keys.length === 0) return obj as T;
+    const [key, ...remKeys] = keys;
+    const value = (obj as any)[key];
+    return path(remKeys, value);
+}
+
+export function has(key: string, obj: Record<string, unknown>): boolean {
+    if (!obj) return false;
+    return Object.prototype.hasOwnProperty.call(obj, key);
+}
+
+export function map<T, U>(func: (value: T) => U, obj: Record<string, T>) {
+    if (!obj) return obj;
+    return Object.keys(obj).reduce<Record<string, U>>((res, key) => {
+        const value = obj[key];
+        res[key] = func(value);
+        return res;
+    }, {});
+}
+
+export const assocPath = _assocPath;

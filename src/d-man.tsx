@@ -1,20 +1,47 @@
-import React, { useEffect, useState } from 'react';
-import * as R from 'ramda';
-import { Provider, useSelector } from 'react-redux';
+import React from 'react';
+import { Provider } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { createDomain } from './domains';
 import setupStore from './store';
-import {
-    Options,
-    DMan,
-    Domains,
-    DomainOptions,
-    DomainsOptions,
-    RootState,
-    UseLocalResponse
-} from '.';
+import { DMan, Domains, RootState } from '.';
+import { generateLocal } from './local-data';
+
+export type DomainsOptions<T> = Record<keyof T, DomainOptions>;
+
+export type DomainOptions = {
+    /**
+     * The root of the api you are accessing.
+     */
+    baseURL: string;
+    /**
+     * This will execute before every rest request to obtain the latest auth token.
+     */
+    getAuthToken?: (state: RootState) => string | undefined;
+};
+
+export type Options<T> = {
+    /**
+     * Name of the local storage key.  Defaults to a random GUID.
+     */
+    localStorageKey?: string;
+    /**
+     * If passing only one rest client.
+     */
+    domain?: DomainOptions;
+    /**
+     * If passing multiple rest clients.
+     */
+    domains?: DomainsOptions<T>;
+    /**
+     * Optional call when logging out.  If result is false, cancel logging out process.
+     */
+    onLogout?: () => Promise<boolean>;
+};
 
 export function createDMan<T>(options: Options<T>): DMan<T> {
+    /**
+     * Generate the key with which to access localStorage.
+     */
     const localStorageKey = options.localStorageKey || uuidv4();
 
     const store = setupStore(localStorageKey);
@@ -23,8 +50,15 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         throw new Error('You must specify either domain or domains!');
     }
 
+    /**
+     * Create domains based of DomainOption(s)
+     */
     const domains = (((() => {
         if (!options.domains) {
+            /**
+             * If there is only one domain, it will still exist within "domains" with
+             * the "default" name.
+             */
             return {
                 default: createDomain(
                     'default',
@@ -33,8 +67,9 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
                 )
             };
         }
-        return R.reduce<keyof T, Partial<Domains<T>>>(
-            (acc, key) => {
+        return Object.keys(options.domains).reduce<Partial<Domains<T>>>(
+            (acc, _key) => {
+                const key = _key as keyof T;
                 const domainOptions = (options.domains as DomainsOptions<T>)[
                     key
                 ];
@@ -46,121 +81,58 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
                 acc[key] = domain;
                 return acc;
             },
-            {},
-            R.keys(options.domains)
+            {}
         ) as Domains<T>;
     })() as unknown) as any) as Domains<T>;
 
-    function logout() {
+    /**
+     * Logs a user out.  May perform a logout function, like hitting an API before logging out completely
+     * out the front-end.
+     */
+    async function logout() {
+        if (options.onLogout) {
+            if (!(await options.onLogout())) return;
+        }
         localStorage.removeItem(localStorageKey);
         store.dispatch({ type: 'LOGOUT' });
     }
 
-    const InnerWrapper = ({ children }: { children: React.ReactNode }) => {
-        const [setup, setSetup] = useState(false);
+    // TODO: move auth to each individual request.
+    // const InnerWrapper = ({ children }: { children: React.ReactNode }) => {
+    //     const [setup, setSetup] = useState(false);
 
-        useEffect(() => {
-            R.forEachObjIndexed((domain, name) => {
-                const { getAuthToken } =
-                    name === 'default'
-                        ? (options.domain as DomainOptions)
-                        : (options.domains as DomainsOptions<T>)[name];
+    //     useEffect(() => {
+    //         for (const name in domains) {
+    //             const domain = domains[name] as Domain;
+    //             const { getAuthToken } =
+    //                 name === 'default'
+    //                     ? (options.domain as DomainOptions)
+    //                     : (options.domains as DomainsOptions<T>)[name];
 
-                if (getAuthToken) {
-                    domain.api.interceptors.request.use((req) => {
-                        const token = getAuthToken(store.getState());
-                        if (token) {
-                            req.headers.authorization = `Bearer ${token}`;
-                        } else {
-                            req.headers.authorization = undefined;
-                        }
-                        return req;
-                    });
-                }
-            }, domains);
-            setSetup(true);
-        }, []);
+    //             if (getAuthToken) {
+    //                 domain.api.interceptors.request.use((req) => {
+    //                     const token = getAuthToken(store.getState());
+    //                     if (token) {
+    //                         req.headers.authorization = `Bearer ${token}`;
+    //                     } else {
+    //                         req.headers.authorization = undefined;
+    //                     }
+    //                     return req;
+    //                 });
+    //             }
+    //         }
+    //         setSetup(true);
+    //     }, []);
 
-        if (!setup) return null;
+    //     if (!setup) return null;
 
-        return children as JSX.Element;
-    };
+    //     return children as JSX.Element;
+    // };
 
-    function local<X>(
-        localName: string,
-        defaultValue?: X,
-        persist?: boolean
-    ): {
-        getData: () => X;
-        useHook: () => UseLocalResponse<X>;
-        dispatch: (data: X) => void;
-    } {
-        const key = `LOCAL${persist ? '-PERSIST' : ''}`;
+    const { local, useLocal } = generateLocal(store);
 
-        const allSelector = (state: RootState) => {
-            return R.path<Record<string, any>>([key], state);
-        };
-
-        const selector = (state: RootState) => {
-            const allLocalData = allSelector(state);
-            return allLocalData && R.has(localName, allLocalData)
-                ? allLocalData[localName]
-                : defaultValue;
-        };
-
-        function dispatch(value: X) {
-            store.dispatch({ type: `${key}|${localName}`, payload: value });
-        }
-
-        function getData() {
-            return selector(store.getState());
-        }
-
-        return {
-            getData,
-            dispatch,
-            useHook: () => useLocal<X>(localName, defaultValue, persist)
-        };
-    }
-
-    function useLocal<X>(
-        localName: string,
-        defaultValue?: X,
-        persist?: boolean
-    ): UseLocalResponse<X> {
-        const key = `LOCAL${persist ? '-PERSIST' : ''}`;
-
-        const allSelector = (state: RootState) => {
-            return R.path<Record<string, any>>([key], state);
-        };
-
-        const selector = (state: RootState) => {
-            const allLocalData = allSelector(state);
-            return allLocalData && R.has(localName, allLocalData)
-                ? allLocalData[localName]
-                : defaultValue;
-        };
-
-        const _local = local(localName, defaultValue, persist);
-
-        const allData = useSelector(allSelector);
-        const data = useSelector(selector);
-
-        React.useEffect(() => {
-            if (defaultValue && (!allData || !R.has(localName, allData))) {
-                _local.dispatch(defaultValue);
-            }
-        }, []);
-
-        return { ..._local, data };
-    }
-
-    const RrsProvider = ({ children }: { children: React.ReactNode }) => {
-        return (
-            <Provider store={store}>
-                <InnerWrapper>{children}</InnerWrapper>
-            </Provider>
-        );
+    const DManProvider = ({ children }: { children: React.ReactNode }) => {
+        return <Provider store={store}>{children}</Provider>;
     };
 
     return {
@@ -169,6 +141,6 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         logout,
         useLocal,
         local,
-        Provider: RrsProvider
+        Provider: DManProvider
     };
 }

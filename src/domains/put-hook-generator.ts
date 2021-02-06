@@ -1,9 +1,8 @@
 import { useSelector } from 'react-redux';
-import * as R from 'ramda';
 import { AxiosInstance } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { RootState, StoreState } from '../store/reducer';
-import { parseStoreState } from '../utils';
+import { parseStoreState, path } from '../utils';
 import { PutHookOptions, PutOptions, PutHookResult } from '..';
 import { Store } from 'redux';
 import putGenerator from './put-generator';
@@ -30,7 +29,7 @@ export default function putHookGenerator(
         )<Req, Res>(url, options);
 
         const storeState = useSelector((state: RootState) =>
-            R.path<StoreState>(put.location, state)
+            path<StoreState>(put.location, state)
         );
 
         const validStoreState = parseStoreState<Res>(storeState);

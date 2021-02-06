@@ -1,16 +1,21 @@
 import { useSelector } from 'react-redux';
-import { AxiosInstance } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { RootState, StoreState } from '../store/reducer';
 import { parseStoreState, path } from '../utils';
-import { PostOptions, PostHookOptions, PostHookResult } from '..';
 import { Store } from 'redux';
-import postGenerator from './post-generator';
+import postGenerator, { PostOptions } from './post-generator';
 import { useMemo } from 'react';
+import { GenericGeneratorResult } from './generic-generator';
+import { DomainOptions } from '.';
+
+export type PostHookResult<Req, Res> = GenericGeneratorResult<Req, Res> &
+    StoreState<Res>;
+
+export type PostHookOptions = {};
 
 export default function postHookGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>
 ) {
     return function usePost<Req, Res>(
@@ -22,14 +27,14 @@ export default function postHookGenerator(
         }, []);
 
         const post = postGenerator(
-            domainApi,
             domain,
+            domainOptions,
             store,
             uuid
         )<Req, Res>(url, options);
 
         const storeState = useSelector((state: RootState) =>
-            path<StoreState>(post.location, state)
+            path<StoreState>(post.storeLocationPath, state)
         );
 
         const validStoreState = parseStoreState<Res>(storeState);

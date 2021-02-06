@@ -1,108 +1,46 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { RootState } from '../store/reducer';
 import { Store } from 'redux';
-import { GetHookOptions, GetOptions, GetResult } from '..';
-import genericGenerator from './generic-generator';
-import getHookGenerator from './get-hook-generator';
-import { path as getPath } from './utils';
+import { BaseOptions } from '..';
+import genericGenerator, { GenericGeneratorResult } from './generic-generator';
+import getHookGenerator, {
+    GetHookOptions,
+    GetHookResult
+} from './get-hook-generator';
+import { DomainOptions } from '.';
 
-type ResponseTransformer<Res> = {
-    (data: any, axiosResponse?: AxiosResponse): Res;
+export type GetOptions<Res = any, Req = any> = BaseOptions<Req, Res>;
+
+export type GetResult<Req, Res> = GenericGeneratorResult<Req, Res> & {
+    useHook: (hookOptions?: GetHookOptions) => GetHookResult<Req, Res>;
 };
-
-type DManAxiosRequestConfig = Omit<
-    AxiosRequestConfig,
-    'transformRequest' | 'transformResponse'
->;
-
-type Path = {
-    domain?: string;
-    url?: string;
-    method?: string;
-};
-
-type RequestConfig<Req, Res> = {
-    requestConfig?: DManAxiosRequestConfig;
-    path?: Path;
-    transformRequest?: Transformer<Req>;
-    transformResponse?: ResponseTransformer<Res>;
-};
-
-type GlobalConfig = {
-    baseUrl: string;
-    domain: string;
-};
-
-type Props = {
-    store: Store<RootState>;
-};
-
-function generateUseGet(props: Props, globalConfig: GlobalConfig) {
-    function useGet<Req, Res>(
-        action: string,
-        config?: RequestConfig<Req, Res>
-    ) {
-        const path = [
-            globalConfig.domain || config?.path?.domain,
-            action || config?.path?.url,
-            'get' || config?.path?.method
-        ];
-
-        const selector = (state: RootState) =>
-            getPath<StoreState>(location, state);
-
-        async function execute() {
-            const response = await axios({
-                baseURL: globalConfig.baseUrl,
-                url: action,
-                ...config?.requestConfig
-            });
-
-            const data =
-                config?.transformResponse &&
-                config?.transformResponse(response.data, response);
-
-            return data;
-        }
-
-        return {
-            execute
-        };
-    }
-
-    return useGet;
-}
 
 export default function getGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>,
-    uuid: string | undefined = undefined
+    uuid?: string
 ) {
     return function get<Res = any, Req = any>(
-        url: string,
+        action: string,
         options: GetOptions<Res, Req> = {}
     ): GetResult<Req, Res> {
         const generic = genericGenerator<Req, Res>(
-            domainApi,
+            domain,
+            domainOptions,
             store,
-            {
-                url,
-                domain,
-                method: 'get'
-            },
-            options,
-            uuid
+            uuid,
+            action,
+            'get'
         );
 
         return {
             ...generic,
             useHook: (hookOptions?: GetHookOptions) =>
                 getHookGenerator(
-                    domainApi,
                     domain,
+                    domainOptions,
                     store
-                )<Res, Req>(url, {
+                )<Res, Req>(action, {
                     ...options,
                     ...hookOptions
                 })

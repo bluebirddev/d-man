@@ -2,8 +2,8 @@ import React from 'react';
 import { RootState } from './store/reducer';
 import { path as getPath, has } from './utils';
 import { Store } from 'redux';
-import { getLocalPath } from './path';
 import { useSelector } from 'react-redux';
+import { getLocalStoreLocationPath, StoreLocationPath } from './store-location';
 
 export type UseLocalResponse<X> = {
     data: X;
@@ -18,8 +18,11 @@ export function generateLocal(store: Store<RootState>) {
         defaultValue?: X,
         persist?: boolean
     ) {
-        const path = getLocalPath(action, persist);
-        const [domain] = path;
+        const storeLocationPath = getLocalStoreLocationPath(
+            action,
+            persist
+        ) as StoreLocationPath;
+        const [domain] = storeLocationPath;
 
         const domainSelector = (state: RootState) => {
             return getPath<Record<string, any>>([domain], state);
@@ -34,7 +37,7 @@ export function generateLocal(store: Store<RootState>) {
 
         function dispatch(value: X) {
             store.dispatch({
-                type: path.join('|'),
+                type: storeLocationPath.join('|'),
                 payload: value
             });
         }

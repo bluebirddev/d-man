@@ -1,40 +1,45 @@
 import { RootState } from '../store/reducer';
-import { AxiosInstance } from 'axios';
 import { Store } from 'redux';
-import { DeleteHookOptions, DeleteOptions, DeleteResult } from '..';
-import genericGenerator from './generic-generator';
-import deleteHookGenerator from './delete-hook-generator';
+import { BaseOptions } from '..';
+import genericGenerator, { GenericGeneratorResult } from './generic-generator';
+import deleteHookGenerator, {
+    DeleteHookOptions,
+    DeleteHookResult
+} from './delete-hook-generator';
+import { DomainOptions } from '.';
+
+export type DeleteOptions<Res = any, Req = any> = BaseOptions<Req, Res>;
+export type DeleteResult<Req, Res> = GenericGeneratorResult<Req, Res> & {
+    useHook: (hookOptions?: DeleteHookOptions) => DeleteHookResult<Req, Res>;
+};
 
 export default function deleteGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>,
-    uuid: string | undefined = undefined
+    uuid?: string
 ) {
     return function del<Res = any, Req = any>(
-        url: string,
+        action: string,
         options: DeleteOptions<Res, Req> = {}
     ): DeleteResult<Req, Res> {
         const generic = genericGenerator<Req, Res>(
-            domainApi,
+            domain,
+            domainOptions,
             store,
-            {
-                url,
-                domain,
-                method: 'delete'
-            },
-            options,
-            uuid
+            uuid,
+            action,
+            'get'
         );
 
         return {
             ...generic,
             useHook: (hookOptions?: DeleteHookOptions) =>
                 deleteHookGenerator(
-                    domainApi,
                     domain,
+                    domainOptions,
                     store
-                )<Res, Req>(url, {
+                )<Res, Req>(action, {
                     ...options,
                     ...hookOptions
                 })

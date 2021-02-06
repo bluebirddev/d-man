@@ -1,11 +1,5 @@
 import { assocPath as _assocPath } from 'ramda';
-import {
-    DefaultLocationOptions,
-    LocationOptions,
-    Location,
-    StoreState
-} from '.';
-import { getDefaultState } from './store/reducer';
+import { getDefaultState, StoreState } from './store/reducer';
 
 export const wait = (n: number) =>
     new Promise((resolve) => setTimeout(resolve, n));
@@ -14,56 +8,6 @@ export function normalizePath(url: string | undefined) {
     if (url === undefined) return '';
     const parts = url.split('/').filter((part) => part);
     return `${parts.join('/')}`;
-}
-
-/**
- * You can either specify domain, url, method seperately, or as an array.
- */
-export function parseLocation(
-    defaultLocation: DefaultLocationOptions,
-    customLocation: LocationOptions,
-    allowEmpty = true
-): Location | undefined {
-    if (!allowEmpty) {
-        if (
-            !customLocation.location &&
-            !(
-                customLocation.url ||
-                customLocation.method ||
-                customLocation.domain
-            )
-        ) {
-            console.warn(
-                'You must specify either "location" or one of "url", "method", or "domain"'
-            );
-            return undefined;
-        }
-    }
-    const [domain, url, method, uuid] = ((): Location => {
-        if (customLocation.location) return customLocation.location;
-        const location: Location = [
-            customLocation.domain || defaultLocation.domain,
-            customLocation.url || defaultLocation.url,
-            customLocation.method || defaultLocation.method
-        ];
-        const _uuid = (customLocation.uuid || defaultLocation.uuid) as
-            | string
-            | undefined;
-        if (_uuid) {
-            return [...location, _uuid] as Location;
-        }
-        return location;
-    })();
-
-    const location: Location = [
-        normalizePath(domain),
-        normalizePath(url),
-        method
-    ];
-    if (uuid) {
-        return [...location, uuid] as Location;
-    }
-    return location;
 }
 
 export function parseError(error: any) {
@@ -118,3 +62,36 @@ export function map<T, U>(func: (value: T) => U, obj: Record<string, T>) {
 }
 
 export const assocPath = _assocPath;
+
+// https://stackoverflow.com/questions/27936772/how-to-deep-merge-instead-of-shallow-merge/34749873
+/**
+ * Simple object check.
+ * @param item
+ * @returns {boolean}
+ */
+export function isObject(item: any) {
+    return item && typeof item === 'object' && !Array.isArray(item);
+}
+
+/**
+ * Deep merge two objects.
+ * @param target
+ * @param ...sources
+ */
+export function mergeDeep<T>(target: any, ...sources: any): T {
+    if (!sources.length) return target as T;
+    const source = sources.shift();
+
+    if (isObject(target) && isObject(source)) {
+        for (const key in source) {
+            if (isObject(source[key])) {
+                if (!target[key]) Object.assign(target, { [key]: {} });
+                mergeDeep(target[key], source[key]);
+            } else {
+                Object.assign(target, { [key]: source[key] });
+            }
+        }
+    }
+
+    return mergeDeep(target, ...sources);
+}

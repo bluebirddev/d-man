@@ -2,15 +2,19 @@ import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { parseStoreState, path } from '../utils';
 import { RootState, StoreState } from '../store/reducer';
-import { AxiosInstance } from 'axios';
-import deleteGenerator from './delete-generator';
+import deleteGenerator, { DeleteOptions } from './delete-generator';
 import { Store } from 'redux';
-import { DeleteOptions, DeleteHookResult } from '..';
 import { useMemo } from 'react';
+import { GenericGeneratorResult } from './generic-generator';
+import { DomainOptions } from '.';
+
+export type DeleteHookResult<Req, Res> = GenericGeneratorResult<Req, Res> &
+    StoreState<Res>;
+export type DeleteHookOptions = {};
 
 export default function deleteHookGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>
 ) {
     return function useDelete<Res = any, Req = any>(
@@ -22,14 +26,14 @@ export default function deleteHookGenerator(
         }, []);
 
         const del = deleteGenerator(
-            domainApi,
             domain,
+            domainOptions,
             store,
             uuid
         )<Res, Req>(url, options);
 
         const storeState = useSelector((state: RootState) =>
-            path<StoreState>(del.location, state)
+            path<StoreState>(del.storeLocationPath, state)
         );
 
         const validStoreState = parseStoreState<Res>(storeState);

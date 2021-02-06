@@ -2,20 +2,34 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { addMilliseconds, fromUnixTime, isBefore } from 'date-fns';
-import { AxiosInstance } from 'axios';
 import { parseStoreState, wait } from '../utils';
-import { RootState } from '../store/reducer';
+import { RootState, StoreState } from '../store/reducer';
 import { Store } from 'redux';
-import { GetHookResult, GetHookOptions, GetOptions } from '..';
-import getGenerator from './get-generator';
+import getGenerator, { GetOptions } from './get-generator';
+import { GenericGeneratorResult } from './generic-generator';
+import { DomainOptions } from '.';
+
+export type GetHookResult<Req, Res> = GenericGeneratorResult<Req, Res> &
+    StoreState<Res>;
+
+export type GetHookOptions = {
+    /**
+     * Will trigger every interval milliseconds.
+     */
+    interval?: number;
+    /**
+     * Will not execute on load.
+     */
+    lazy?: boolean;
+};
 
 export default function getHookGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>
 ) {
     return function useGet<Res = any, Req = any>(
-        url: string,
+        action: string,
         options: GetHookOptions & GetOptions<Res, Req> = {}
     ): GetHookResult<Req, Res> {
         const uuid = useMemo(() => {
@@ -23,11 +37,11 @@ export default function getHookGenerator(
         }, []);
 
         const get = getGenerator(
-            domainApi,
             domain,
+            domainOptions,
             store,
             uuid
-        )<Res, Req>(url, options);
+        )<Res, Req>(action, options);
 
         const storeState = useSelector(get.selector);
 
@@ -43,8 +57,8 @@ export default function getHookGenerator(
         const mounted = useRef(false);
 
         const reset = useCallback(() => {
-            dispatch({ type: get.location.join('|') });
-        }, [get.location, dispatch]);
+            dispatch({ type: get.storeLocationPath.join('|') });
+        }, [get.storeLocationPath, dispatch]);
 
         useEffect(() => {
             mounted.current = true;

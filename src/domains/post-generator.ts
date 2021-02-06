@@ -1,40 +1,45 @@
-import { AxiosInstance } from 'axios';
 import { RootState } from '../store/reducer';
 import { Store } from 'redux';
-import genericGenerator from './generic-generator';
-import { PostResult, PostHookOptions, PostOptions } from '..';
-import postHookGenerator from './post-hook-generator';
+import genericGenerator, { GenericGeneratorResult } from './generic-generator';
+import { BaseOptions } from '..';
+import postHookGenerator, {
+    PostHookOptions,
+    PostHookResult
+} from './post-hook-generator';
+import { DomainOptions } from '.';
+
+export type PostResult<Req, Res> = GenericGeneratorResult<Req, Res> & {
+    useHook: (hookOptions?: PostHookOptions) => PostHookResult<Req, Res>;
+};
+export type PostOptions<Req = any, Res = any> = BaseOptions<Req, Res>;
 
 export default function postGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>,
-    uuid: string | undefined = undefined
+    uuid?: string
 ) {
     return function post<Req, Res>(
-        url: string,
+        action: string,
         options: PostOptions<Req, Res> = {}
     ): PostResult<Req, Res> {
         const generic = genericGenerator<Req, Res>(
-            domainApi,
+            domain,
+            domainOptions,
             store,
-            {
-                url,
-                domain,
-                method: 'post'
-            },
-            options,
-            uuid
+            uuid,
+            action,
+            'post'
         );
 
         return {
             ...generic,
             useHook: (hookOptions?: PostHookOptions) =>
                 postHookGenerator(
-                    domainApi,
                     domain,
+                    domainOptions,
                     store
-                )<Req, Res>(url, {
+                )<Req, Res>(action, {
                     ...options,
                     ...hookOptions
                 })

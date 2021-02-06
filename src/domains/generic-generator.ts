@@ -1,73 +1,126 @@
+import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { RootState, StoreState } from '../store/reducer';
 import { Store } from 'redux';
+import { BaseOptions, DManAxiosRequestConfig } from '..';
+import { mergeDeep, parseError, parseStoreState, path, wait } from '../utils';
 import {
-    DefaultLocationOptions,
-    Location,
-    BaseOptions,
-    GenericGeneratorResult
-} from '..';
-import {
-    has,
-    parseError,
-    parseLocation,
-    parseStoreState,
-    path,
-    wait
-} from '../utils';
+    getStoreLocation,
+    Method,
+    convertToStoreLocationPath,
+    StoreLocationPath,
+    trimStoreLocation
+} from '../store-location';
+import { DomainOptions } from '.';
+
+function parseRequest<Req, Res>(
+    requestData: Req | undefined,
+    baseUrl: string,
+    url: string,
+    method: Method,
+    options: BaseOptions<Req, Res> = {},
+    authHeader?: string
+) {
+    let requestConfig: Partial<DManAxiosRequestConfig> = options?.requestConfig || {
+        data: requestData,
+        baseURL: baseUrl,
+        method,
+        url,
+        headers: {
+            Authorization: authHeader
+        }
+    };
+
+    // transformRequest takes precedence
+    if (options?.transformRequest) {
+        requestConfig = mergeDeep(
+            requestConfig,
+            options.transformRequest(requestData)
+        );
+    }
+
+    return requestConfig;
+}
+
+export type GenericGeneratorResult<Req, Res> = {
+    selector: (state: RootState) => StoreState<unknown> | undefined;
+    storeLocationPath: StoreLocationPath;
+    getState: () => StoreState<Res>;
+    execute: (
+        data?: Req | undefined
+    ) => Promise<[string | undefined, Res | undefined]>;
+    reset: () => void;
+};
 
 export default function genericGenerator<Req = any, Res = any>(
-    domainApi: AxiosInstance,
+    domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>,
-    _location: DefaultLocationOptions,
-    options: BaseOptions<Req, Res> = {},
-    _uuid: string | undefined
+    uuid: string | undefined,
+    action: string,
+    method: Method,
+    options: BaseOptions<Req, Res> = {}
 ): GenericGeneratorResult<Req, Res> {
+    const _uuid = (() => {
+        if (uuid) return uuid;
+        if (options.multiple) return uuidv4();
+        return undefined;
+    })();
+
+    const defaultStoreLocation = trimStoreLocation({
+        domain,
+        action,
+        method,
+        uuid: _uuid
+    });
+
     const { dispatch } = store;
 
-    // This cannot be generated on each render.  If it comes from a hook, it should only generate once.
-    // TODO: find a better way to do this.
-    const uuid = options.multiple ? _uuid || uuidv4() : undefined;
+    /**
+     * Merges options.storeLocation with defaultStoreLocation (if you want a custom location for the store)
+     */
+    const storeLocationPath = convertToStoreLocationPath({
+        ...defaultStoreLocation,
+        ...options?.storeLocation
+    });
 
-    const location = parseLocation({ ..._location, uuid }, options) as Location;
+    if (!storeLocationPath) {
+        throw new Error('Something went wrong.  Location not defined');
+    }
 
-    const selector = (state: RootState) => path<StoreState>(location, state);
+    const selector = (state: RootState) =>
+        path<StoreState>(storeLocationPath, state);
 
     const getStoreState = () =>
         parseStoreState<Res>(selector(store.getState()));
 
     const reset = () => {
-        dispatch({ type: location.join('|') });
+        dispatch({ type: storeLocationPath.join('|') });
     };
 
     const execute = async (
-        data?: Req
+        requestData?: Req
     ): Promise<[string | undefined, Res | undefined]> => {
         try {
-            dispatch({ type: `${location.join('|')}|loading` });
+            dispatch({ type: `${storeLocationPath.join('|')}|loading` });
 
-            const parsedRequest =
-                options.parseRequest && options.parseRequest(data as Req);
+            const requestConfig = parseRequest(
+                requestData,
+                domainOptions.baseURL,
+                action,
+                method,
+                options,
+                domainOptions?.getAuthToken &&
+                    domainOptions.getAuthToken(store.getState())
+            );
 
-            const hasParsedRequestData =
-                parsedRequest && has('data', parsedRequest);
-            const hasParsedHeaders =
-                parsedRequest && has('headers', parsedRequest);
-            const hasParsedParams =
-                parsedRequest && has('params', parsedRequest);
-            const hasParsedUrl = parsedRequest && has('url', parsedRequest);
-
-            const parsedRequestData = hasParsedRequestData
-                ? parsedRequest?.data
-                : data;
+            const { data: parsedRequestData } = requestConfig;
 
             if (options.injectRequest) {
                 options.injectRequest.forEach((injector) => {
-                    const injectLocation = parseLocation(
-                        _location,
-                        injector,
-                        false
+                    const injectLocation = getStoreLocation(
+                        storeLocationPath,
+                        injector.storeLocation
                     );
                     if (injectLocation) {
                         const injectorSelector = (state: RootState) =>
@@ -92,37 +145,27 @@ export default function genericGenerator<Req = any, Res = any>(
                 });
             }
 
-            const axiosConfig: AxiosRequestConfig = {
-                method: location[2]
-            };
-            if (hasParsedHeaders) {
-                axiosConfig.headers = parsedRequest?.headers;
-            }
-            if (hasParsedParams) {
-                axiosConfig.params = parsedRequest?.params;
-            }
-
-            axiosConfig.url = hasParsedUrl
-                ? (parsedRequest?.url as string)
-                : _location.url;
-
-            axiosConfig.data = parsedRequestData;
-
-            const _responseData = await (async () => {
+            const responseData = await (async () => {
                 if (options.fake) {
                     await wait(options.fake);
                     return undefined;
                 }
-                const response = await domainApi.request(axiosConfig);
+                const instance = axios.create();
+                if (domainOptions.useRequestInterceptor) {
+                    instance.interceptors.request.use(
+                        domainOptions.useRequestInterceptor.onSuccess,
+                        domainOptions.useRequestInterceptor.onError
+                    );
+                }
+                const response = await instance(requestConfig);
                 return response.data;
             })();
 
             if (options.injectResponse) {
-                options.injectResponse.forEach((request) => {
-                    const injectLocation = parseLocation(
-                        _location,
-                        request,
-                        false
+                options.injectResponse.forEach((injector) => {
+                    const injectLocation = getStoreLocation(
+                        storeLocationPath,
+                        injector.storeLocation
                     );
                     if (injectLocation) {
                         const injectorSelector = (state: RootState) =>
@@ -132,13 +175,13 @@ export default function genericGenerator<Req = any, Res = any>(
                             injectorSelector(store.getState())
                         );
 
-                        const injectorPayload = request.parseResponse
-                            ? request.parseResponse(
+                        const injectorPayload = injector.parseResponse
+                            ? injector.parseResponse(
                                   injectorStoreState,
-                                  _responseData,
+                                  responseData,
                                   parsedRequestData
                               )
-                            : _responseData;
+                            : responseData;
 
                         dispatch({
                             type: `${injectLocation.join('|')}|data`,
@@ -148,17 +191,17 @@ export default function genericGenerator<Req = any, Res = any>(
                 });
             }
 
-            const responseData: Res = options.parseResponseData
-                ? options.parseResponseData(_responseData, data)
-                : _responseData;
+            const parsedResponseData: Res = options.transformResponseData
+                ? options.transformResponseData(responseData, parsedRequestData)
+                : responseData;
 
             if (options.onSuccess) {
-                await options.onSuccess(responseData, data);
+                await options.onSuccess(responseData, parsedRequestData);
             }
 
             dispatch({
-                type: `${location.join('|')}|data`,
-                payload: responseData
+                type: `${storeLocationPath.join('|')}|data`,
+                payload: parsedResponseData
             });
 
             return [undefined, responseData];
@@ -166,7 +209,7 @@ export default function genericGenerator<Req = any, Res = any>(
             const error = parseError(_error);
 
             dispatch({
-                type: `${location.join('|')}|error`,
+                type: `${storeLocationPath.join('|')}|error`,
                 payload: error
             });
 
@@ -176,10 +219,9 @@ export default function genericGenerator<Req = any, Res = any>(
 
     return {
         selector,
-        location,
+        storeLocationPath,
         getState: getStoreState,
         execute,
-        reset,
-        uuid
+        reset
     };
 }

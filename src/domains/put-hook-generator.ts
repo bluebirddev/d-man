@@ -1,16 +1,21 @@
 import { useSelector } from 'react-redux';
-import { AxiosInstance } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { RootState, StoreState } from '../store/reducer';
 import { parseStoreState, path } from '../utils';
-import { PutHookOptions, PutOptions, PutHookResult } from '..';
 import { Store } from 'redux';
-import putGenerator from './put-generator';
+import putGenerator, { PutOptions } from './put-generator';
 import { useMemo } from 'react';
+import { GenericGeneratorResult } from './generic-generator';
+import { DomainOptions } from '.';
+
+export type PutHookOptions = {};
+
+export type PutHookResult<Req, Res> = GenericGeneratorResult<Req, Res> &
+    StoreState<Res>;
 
 export default function putHookGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>
 ) {
     return function usePut<Req, Res>(
@@ -22,14 +27,14 @@ export default function putHookGenerator(
         }, []);
 
         const put = putGenerator(
-            domainApi,
             domain,
+            domainOptions,
             store,
             uuid
         )<Req, Res>(url, options);
 
         const storeState = useSelector((state: RootState) =>
-            path<StoreState>(put.location, state)
+            path<StoreState>(put.storeLocationPath, state)
         );
 
         const validStoreState = parseStoreState<Res>(storeState);

@@ -1,6 +1,6 @@
 {
   "name": "d-man",
-  "version": "0.2.0",
+  "version": "0.3.0-beta.0",
   "description": "Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.",
   "author": "vssrcj",
   "license": "MIT",
@@ -21,17 +21,18 @@
     "test:unit": "cross-env CI=1 react-scripts test --env=jsdom",
     "test:watch": "react-scripts test --env=jsdom",
     "predeploy": "cd example && npm install && npm run build",
-    "deploy": "gh-pages -d example/build"
+    "deploy": "gh-pages -d example/build",
+    "start:example": "npm run predeploy && npm run start"
   },
-  "dependencies": {
+  "peerDepedencies": {
     "react": ">16.8",
-    "react-redux": ">7",
-    "redux": ">4",
-    "uuid": ">8",
+    "react-redux": ">=7.x",
+    "redux": ">=4.x",
+    "uuid": ">=8.x",
     "ramda": "^0.27",
     "axios": "^0.20",
-    "reselect": ">4",
-    "date-fns": ">2"
+    "reselect": ">=4.x",
+    "date-fns": ">=2.x"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^4.2.4",

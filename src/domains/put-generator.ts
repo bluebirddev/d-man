@@ -1,40 +1,46 @@
-import { AxiosInstance } from 'axios';
 import { RootState } from '../store/reducer';
 import { Store } from 'redux';
-import genericGenerator from './generic-generator';
-import { PutHookOptions, PutOptions, PutResult } from '..';
-import putHookGenerator from './put-hook-generator';
+import genericGenerator, { GenericGeneratorResult } from './generic-generator';
+import { BaseOptions } from '..';
+import putHookGenerator, {
+    PutHookOptions,
+    PutHookResult
+} from './put-hook-generator';
+import { DomainOptions } from '.';
+
+export type PutOptions<Req = any, Res = any> = BaseOptions<Req, Res>;
+
+export type PutResult<Req, Res> = GenericGeneratorResult<Req, Res> & {
+    useHook: (hookOptions?: PutHookOptions) => PutHookResult<Req, Res>;
+};
 
 export default function putGenerator(
-    domainApi: AxiosInstance,
     domain: string,
+    domainOptions: DomainOptions,
     store: Store<RootState>,
-    uuid: string | undefined = undefined
+    uuid?: string
 ) {
     return function put<Req, Res>(
-        url: string,
+        action: string,
         options: PutOptions<Req, Res> = {}
     ): PutResult<Req, Res> {
         const generic = genericGenerator<Req, Res>(
-            domainApi,
+            domain,
+            domainOptions,
             store,
-            {
-                url,
-                domain,
-                method: 'put'
-            },
-            options,
-            uuid
+            uuid,
+            action,
+            'put'
         );
 
         return {
             ...generic,
             useHook: (hookOptions?: PutHookOptions) =>
                 putHookGenerator(
-                    domainApi,
                     domain,
+                    domainOptions,
                     store
-                )<Req, Res>(url, {
+                )<Req, Res>(action, {
                     ...options,
                     ...hookOptions
                 })

@@ -1,23 +1,15 @@
 import React from 'react';
 import { Provider } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
-import { createDomain } from './domains';
+import {
+    createDomain,
+    DomainOptions,
+    Domains,
+    DomainsOptions
+} from './domains';
 import setupStore from './store';
-import { DMan, Domains, RootState } from '.';
+import { DMan } from '.';
 import { generateLocal } from './local-data';
-
-export type DomainsOptions<T> = Record<keyof T, DomainOptions>;
-
-export type DomainOptions = {
-    /**
-     * The root of the api you are accessing.
-     */
-    baseURL: string;
-    /**
-     * This will execute before every rest request to obtain the latest auth token.
-     */
-    getAuthToken?: (state: RootState) => string | undefined;
-};
 
 export type Options<T> = {
     /**
@@ -96,38 +88,6 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         localStorage.removeItem(localStorageKey);
         store.dispatch({ type: 'LOGOUT' });
     }
-
-    // TODO: move auth to each individual request.
-    // const InnerWrapper = ({ children }: { children: React.ReactNode }) => {
-    //     const [setup, setSetup] = useState(false);
-
-    //     useEffect(() => {
-    //         for (const name in domains) {
-    //             const domain = domains[name] as Domain;
-    //             const { getAuthToken } =
-    //                 name === 'default'
-    //                     ? (options.domain as DomainOptions)
-    //                     : (options.domains as DomainsOptions<T>)[name];
-
-    //             if (getAuthToken) {
-    //                 domain.api.interceptors.request.use((req) => {
-    //                     const token = getAuthToken(store.getState());
-    //                     if (token) {
-    //                         req.headers.authorization = `Bearer ${token}`;
-    //                     } else {
-    //                         req.headers.authorization = undefined;
-    //                     }
-    //                     return req;
-    //                 });
-    //             }
-    //         }
-    //         setSetup(true);
-    //     }, []);
-
-    //     if (!setup) return null;
-
-    //     return children as JSX.Element;
-    // };
 
     const { local, useLocal } = generateLocal(store);
 

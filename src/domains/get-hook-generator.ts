@@ -2,9 +2,9 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { addMilliseconds, fromUnixTime, isBefore } from 'date-fns';
+import { Store } from 'redux';
 import { parseStoreState, wait } from '../utils';
 import { RootState, StoreState } from '../store/reducer';
-import { Store } from 'redux';
 import getGenerator, { GetOptions } from './get-generator';
 import { GenericGeneratorResult } from './generic-generator';
 import { DomainOptions } from '.';
@@ -34,7 +34,7 @@ export default function getHookGenerator(
     ): GetHookResult<Req, Res> {
         const uuid = useMemo(() => {
             return options.multiple ? uuidv4() : undefined;
-        }, []);
+        }, [options.multiple]);
 
         const get = getGenerator(
             domain,
@@ -90,7 +90,7 @@ export default function getHookGenerator(
                 await wait(options.interval);
                 checkInterval();
             }
-        }, [options.interval, get.execute, storeState]);
+        }, [options.interval, storeState?.lastUpdated, get]);
 
         /**
          * If mounted, and not lazy -> refresh
@@ -99,6 +99,7 @@ export default function getHookGenerator(
             if (!options.lazy && !storeState?.executed) {
                 get.execute();
             }
+            // eslint-disable-next-line react-hooks/exhaustive-deps
         }, [options.lazy, get.execute, storeState]);
 
         /**

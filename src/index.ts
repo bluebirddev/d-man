@@ -1,6 +1,6 @@
+import { AxiosRequestConfig } from 'axios';
 import { StoreState } from './store/reducer';
 import { createDMan } from './d-man';
-import { AxiosRequestConfig } from 'axios';
 import { StoreLocation } from './store-location';
 import { Domain, Domains } from './domains';
 import { UseLocalResponse } from './local-data';

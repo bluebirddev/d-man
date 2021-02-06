@@ -3,3 +3,11 @@ dist/
 node_modules/
 .snapshots/
 *.min.js
+postcss.config.js
+tailwind.config.js
+.eslintrc.js
+public/
+build/
+*.d.ts
+
+src/serviceWorker.js

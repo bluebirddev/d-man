@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
-import { RootState, StoreState } from '../store/reducer';
 import { Store } from 'redux';
+import { RootState, StoreState } from '../store/reducer';
 import { BaseOptions, DManAxiosRequestConfig } from '..';
 import { mergeDeep, parseError, parseStoreState, path, wait } from '../utils';
 import {

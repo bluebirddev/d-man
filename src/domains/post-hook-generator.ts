@@ -1,17 +1,19 @@
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
+import { Store } from 'redux';
+import { useMemo } from 'react';
 import { RootState, StoreState } from '../store/reducer';
 import { parseStoreState, path } from '../utils';
-import { Store } from 'redux';
 import postGenerator, { PostOptions } from './post-generator';
-import { useMemo } from 'react';
 import { GenericGeneratorResult } from './generic-generator';
 import { DomainOptions } from '.';
 
 export type PostHookResult<Req, Res> = GenericGeneratorResult<Req, Res> &
     StoreState<Res>;
 
-export type PostHookOptions = {};
+export type PostHookOptions = {
+    //
+};
 
 export default function postHookGenerator(
     domain: string,
@@ -24,7 +26,7 @@ export default function postHookGenerator(
     ): PostHookResult<Req, Res> {
         const uuid = useMemo(() => {
             return options.multiple ? uuidv4() : undefined;
-        }, []);
+        }, [options.multiple]);
 
         const post = postGenerator(
             domain,

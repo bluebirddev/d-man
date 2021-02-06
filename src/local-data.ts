@@ -1,8 +1,8 @@
 import React from 'react';
-import { RootState } from './store/reducer';
-import { path as getPath, has } from './utils';
 import { Store } from 'redux';
 import { useSelector } from 'react-redux';
+import { RootState } from './store/reducer';
+import { path as getPath, has } from './utils';
 import { getLocalStoreLocationPath, StoreLocationPath } from './store-location';
 
 export type UseLocalResponse<X> = {
@@ -54,6 +54,25 @@ export function generateLocal(store: Store<RootState>) {
         };
     }
 
+    function useLocal<X>(
+        action: string,
+        defaultValue?: X,
+        persist?: boolean
+    ): UseLocalResponse<X> {
+        const localProps = getLocalProps(action, defaultValue, persist);
+
+        const domainData = useSelector(localProps.domainSelector);
+        const data = useSelector(localProps.selector);
+
+        React.useEffect(() => {
+            if (defaultValue && (!domainData || !has(action, domainData))) {
+                localProps.dispatch(defaultValue);
+            }
+        }, [action, defaultValue, domainData, localProps]);
+
+        return { ...localProps, data };
+    }
+
     function local<X>(
         action: string,
         defaultValue?: X,
@@ -69,25 +88,6 @@ export function generateLocal(store: Store<RootState>) {
             ...localProps,
             useHook: () => useLocal<X>(action, defaultValue, persist)
         };
-    }
-
-    function useLocal<X>(
-        action: string,
-        defaultValue?: X,
-        persist?: boolean
-    ): UseLocalResponse<X> {
-        const localProps = getLocalProps(action, defaultValue, persist);
-
-        const domainData = useSelector(localProps.domainSelector);
-        const data = useSelector(localProps.selector);
-
-        React.useEffect(() => {
-            if (defaultValue && (!domainData || !has(action, domainData))) {
-                localProps.dispatch(defaultValue);
-            }
-        }, []);
-
-        return { ...localProps, data };
     }
     return { local, useLocal };
 }

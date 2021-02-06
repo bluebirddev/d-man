@@ -1,14 +1,16 @@
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
+import { Store } from 'redux';
+import { useMemo } from 'react';
 import { RootState, StoreState } from '../store/reducer';
 import { parseStoreState, path } from '../utils';
-import { Store } from 'redux';
 import putGenerator, { PutOptions } from './put-generator';
-import { useMemo } from 'react';
 import { GenericGeneratorResult } from './generic-generator';
 import { DomainOptions } from '.';
 
-export type PutHookOptions = {};
+export type PutHookOptions = {
+    //
+};
 
 export type PutHookResult<Req, Res> = GenericGeneratorResult<Req, Res> &
     StoreState<Res>;
@@ -24,7 +26,7 @@ export default function putHookGenerator(
     ): PutHookResult<Req, Res> {
         const uuid = useMemo(() => {
             return options.multiple ? uuidv4() : undefined;
-        }, []);
+        }, [options.multiple]);
 
         const put = putGenerator(
             domain,

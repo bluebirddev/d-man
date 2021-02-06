@@ -1,7 +1,7 @@
 import { createSelector } from 'reselect';
 import { useSelector } from 'react-redux';
-import { DomainState, RootState } from '../store/reducer';
 import { Store } from 'redux';
+import { DomainState, RootState } from '../store/reducer';
 import postGenerator from './post-generator';
 import postHookGenerator from './post-hook-generator';
 import getGenerator from './get-generator';

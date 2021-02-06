@@ -1,5 +1,5 @@
-import { RootState } from '../store/reducer';
 import { Store } from 'redux';
+import { RootState } from '../store/reducer';
 import genericGenerator, { GenericGeneratorResult } from './generic-generator';
 import { BaseOptions } from '..';
 import putHookGenerator, {

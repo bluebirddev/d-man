@@ -12,11 +12,21 @@ export type StoreLocationPath =
     | [string, string, string] // domain, action, method
     | [string, string, string, string]; // domain, action, method
 
-export function getLocalStoreLocationPath(action: string, persist?: boolean) {
-    return convertToStoreLocationPath({
-        domain: `LOCAL${persist ? '-PERSIST' : ''}`,
-        action
-    });
+/**
+ * Removes empty elements from array from the back until a non-empty element is found.
+ */
+export function trimStoreLocationPath(
+    path: StoreLocationPath
+): StoreLocationPath {
+    const _path = path as string[];
+    if (_path.length === 0) return path;
+    const last = path[path.length - 1];
+    if (last === undefined) {
+        return trimStoreLocationPath(
+            _path.slice(0, _path.length - 1) as StoreLocationPath
+        );
+    }
+    return path;
 }
 
 export function convertToStoreLocationPath(
@@ -29,6 +39,13 @@ export function convertToStoreLocationPath(
         storeLocation.method as string,
         storeLocation.uuid as string
     ]) as StoreLocationPath;
+}
+
+export function getLocalStoreLocationPath(action: string, persist?: boolean) {
+    return convertToStoreLocationPath({
+        domain: `LOCAL${persist ? '-PERSIST' : ''}`,
+        action
+    });
 }
 
 export function convertToStoreLocation(
@@ -51,23 +68,6 @@ export function trimStoreLocation(storeLocation: StoreLocation): StoreLocation {
         action: storeLocation.action,
         method: storeLocation.method
     };
-}
-
-/**
- * Removes empty elements from array from the back until a non-empty element is found.
- */
-export function trimStoreLocationPath(
-    path: StoreLocationPath
-): StoreLocationPath {
-    const _path = path as string[];
-    if (_path.length === 0) return path;
-    const last = path[path.length - 1];
-    if (last === undefined) {
-        return trimStoreLocationPath(
-            _path.slice(0, _path.length - 1) as StoreLocationPath
-        );
-    }
-    return path;
 }
 
 /**

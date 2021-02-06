@@ -1,16 +1,18 @@
 import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
+import { Store } from 'redux';
+import { useMemo } from 'react';
 import { parseStoreState, path } from '../utils';
 import { RootState, StoreState } from '../store/reducer';
 import deleteGenerator, { DeleteOptions } from './delete-generator';
-import { Store } from 'redux';
-import { useMemo } from 'react';
 import { GenericGeneratorResult } from './generic-generator';
 import { DomainOptions } from '.';
 
 export type DeleteHookResult<Req, Res> = GenericGeneratorResult<Req, Res> &
     StoreState<Res>;
-export type DeleteHookOptions = {};
+export type DeleteHookOptions = {
+    //
+};
 
 export default function deleteHookGenerator(
     domain: string,
@@ -23,7 +25,7 @@ export default function deleteHookGenerator(
     ): DeleteHookResult<Req, Res> {
         const uuid = useMemo(() => {
             return options.multiple ? uuidv4() : undefined;
-        }, []);
+        }, [options.multiple]);
 
         const del = deleteGenerator(
             domain,

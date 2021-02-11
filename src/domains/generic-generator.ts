@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { Store } from 'redux';
 import { RootState, StoreState } from '../store/reducer';
@@ -13,6 +13,17 @@ import {
 } from '../store-location';
 import { DomainOptions } from '.';
 
+function convertToAxiosRequest(
+    requestConfig: DManAxiosRequestConfig
+): AxiosRequestConfig {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { queryParams, urlParams, ...rem } = requestConfig;
+    return {
+        ...rem,
+        params: queryParams
+    };
+}
+
 function parseRequest<Req, Res>(
     requestData: Req | undefined,
     baseUrl: string,
@@ -21,22 +32,36 @@ function parseRequest<Req, Res>(
     options: BaseOptions<Req, Res> = {},
     authHeader?: string
 ) {
-    let requestConfig: Partial<DManAxiosRequestConfig> = options?.requestConfig || {
+    const requestConfig: Partial<DManAxiosRequestConfig> = {
         data: requestData,
         baseURL: baseUrl,
         method,
         url,
         headers: {
             Authorization: authHeader
-        }
+        },
+        ...options?.requestConfig
     };
 
     // transformRequest takes precedence
     if (options?.transformRequest) {
-        requestConfig = mergeDeep(
+        const transformedRequest = options.transformRequest(requestData as Req);
+
+        if (transformedRequest.urlParams) {
+            transformedRequest.url = Object.keys(
+                transformedRequest.urlParams
+            ).reduce<string>((res, key) => {
+                const replacement =
+                    transformedRequest.urlParams &&
+                    transformedRequest.urlParams[key];
+                return res.replaceAll(`:${key}`, replacement?.toString() || '');
+            }, '');
+        }
+
+        return mergeDeep(
             requestConfig,
-            options.transformRequest(requestData)
-        );
+            transformedRequest
+        ) as Partial<DManAxiosRequestConfig>;
     }
 
     return requestConfig;
@@ -157,7 +182,9 @@ export default function genericGenerator<Req = any, Res = any>(
                         domainOptions.useRequestInterceptor.onError
                     );
                 }
-                const response = await instance(requestConfig);
+                const response = await instance(
+                    convertToAxiosRequest(requestConfig)
+                );
                 return response.data;
             })();
 

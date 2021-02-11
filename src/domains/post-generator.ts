@@ -29,7 +29,8 @@ export default function postGenerator(
             store,
             uuid,
             action,
-            'post'
+            'post',
+            options
         );
 
         return {

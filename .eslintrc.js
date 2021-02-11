@@ -16,5 +16,6 @@ module.exports = {
       'react/require-default-props': 'off',
       'import/no-extraneous-dependencies': 'off',
       'no-underscore-dangle': 'off',
+      '@typescript-eslint/no-explicit-any': 'off'
   },
 };

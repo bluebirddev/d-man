@@ -8,6 +8,37 @@ import deleteHookGenerator, {
 } from './delete-hook-generator';
 import { DomainOptions } from '.';
 
+// type Method = 'get' | 'post';
+
+// type Spec = {
+//     a: {
+//         get: number;
+//         post: {
+//             data?: boolean;
+//         };
+//     };
+//     b: {
+//         get: string;
+//     };
+//     c: {
+//         get: Date;
+//     };
+// };
+
+// function get<T extends Record<string, any>, K extends keyof T>() {
+//     type P = T[K];
+//     return function me<V extends keyof P>() {
+//         type S = P[V];
+
+//         type q = S['data'];
+
+//         return (2 as unknown) as q;
+//     };
+// }
+
+// const hey = get<Spec, 'a'>();
+// const r = hey<'post'>();
+
 export type DeleteOptions<Res = any, Req = any> = BaseOptions<Req, Res>;
 export type DeleteResult<Req, Res> = GenericGeneratorResult<Req, Res> & {
     useHook: (hookOptions?: DeleteHookOptions) => DeleteHookResult<Req, Res>;
@@ -29,7 +60,8 @@ export default function deleteGenerator(
             store,
             uuid,
             action,
-            'get'
+            'get',
+            options
         );
 
         return {

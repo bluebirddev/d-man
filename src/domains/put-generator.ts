@@ -30,7 +30,8 @@ export default function putGenerator(
             store,
             uuid,
             action,
-            'put'
+            'put',
+            options
         );
 
         return {

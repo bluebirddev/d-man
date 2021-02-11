@@ -22,7 +22,7 @@ export default function getGenerator(
 ) {
     return function get<Res = any, Req = any>(
         action: string,
-        options: GetOptions<Res, Req> = {}
+        options: GetOptions<Res, Req>
     ): GetResult<Req, Res> {
         const generic = genericGenerator<Req, Res>(
             domain,
@@ -30,7 +30,8 @@ export default function getGenerator(
             store,
             uuid,
             action,
-            'get'
+            'get',
+            options
         );
 
         return {

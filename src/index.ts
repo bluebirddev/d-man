@@ -77,15 +77,19 @@ export type TransformResponseData<Req, Res> = (
 export type TransformedRequest = {
     data?: unknown;
     headers?: unknown;
-    params?: unknown;
+    queryParams?: unknown;
     url?: string;
+    urlParams?: Record<string, string | number | undefined>;
 };
 
-export type TransformRequest<Req> = (requestData?: Req) => TransformedRequest;
+export type TransformRequest<Req> = (requestData: Req) => TransformedRequest;
 
-export type DManAxiosRequestConfig = Omit<
+export type DManAxiosRequestConfig = {
+    queryParams?: AxiosRequestConfig['params'];
+    urlParams?: Record<string, string | number | undefined>;
+} & Omit<
     AxiosRequestConfig,
-    'transformRequest' | 'transformResponse'
+    'transformRequest' | 'transformResponse' | 'params'
 >;
 
 export type BaseOptions<Req, Res> = {

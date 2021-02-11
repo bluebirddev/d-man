@@ -1,3 +1,5 @@
+import { normalizePath } from './utils';
+
 export type Method = 'get' | 'post' | 'put' | 'delete';
 
 export type StoreLocation = {
@@ -35,7 +37,7 @@ export function convertToStoreLocationPath(
     if (!storeLocation) return undefined;
     return trimStoreLocationPath([
         storeLocation.domain,
-        storeLocation.action as string,
+        normalizePath(storeLocation.action as string),
         storeLocation.method as string,
         storeLocation.uuid as string
     ]) as StoreLocationPath;
@@ -44,7 +46,7 @@ export function convertToStoreLocationPath(
 export function getLocalStoreLocationPath(action: string, persist?: boolean) {
     return convertToStoreLocationPath({
         domain: `LOCAL${persist ? '-PERSIST' : ''}`,
-        action
+        action: normalizePath(action)
     });
 }
 
@@ -54,7 +56,7 @@ export function convertToStoreLocation(
     if (!storeLocationPath) return undefined;
     const storeLocation: StoreLocation = {
         domain: storeLocationPath[0],
-        action: storeLocationPath[1],
+        action: normalizePath(storeLocationPath[1]),
         method: storeLocationPath[2] as Method
     };
     if (!storeLocationPath[3]) return storeLocation;
@@ -65,7 +67,7 @@ export function trimStoreLocation(storeLocation: StoreLocation): StoreLocation {
     if (storeLocation.uuid) return storeLocation;
     return {
         domain: storeLocation.domain,
-        action: storeLocation.action,
+        action: normalizePath(storeLocation.action),
         method: storeLocation.method
     };
 }

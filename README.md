@@ -1,8 +1,8 @@
-# react-rest-store
+# d-man
 
 > Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.
 
-[![NPM](https://img.shields.io/npm/v/react-rest-store.svg)](https://www.npmjs.com/package/react-rest-store) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![NPM](https://img.shields.io/npm/v/d-man.svg)](https://www.npmjs.com/package/d-man) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## What is this?
 
@@ -34,9 +34,9 @@ Example [here](https://bluebirddev.github.io/d-man)
 ```tsx
 import React from 'react';
 
-import {createRrs } from 'react-rest-store';
+import { createDMan } from 'd-man';
 
-const { Provider, domain } = createRrs({
+const { Provider, domain } = createDMan({
   domain: {
     baseURL: 'https://jsonplaceholder.typicode.com',
   },

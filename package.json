@@ -1,10 +1,10 @@
 {
   "name": "d-man",
-  "version": "0.3.0-beta.12",
+  "version": "0.3.0-beta.13",
   "description": "Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.",
   "author": "vssrcj",
   "license": "MIT",
-  "repository": "https://github.com/bluebirddev/react-rest-store",
+  "repository": "https://github.com/bluebirddev/d-man",
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
   "source": "src/index.ts",

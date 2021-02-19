@@ -1,26 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { StoreState } from '../store/reducer';
+import { getInitialStoreLocation, StoreLocation } from './store-location';
 
 type Method = 'get' | 'post' | 'put' | 'delete' | 'patch';
-
-type StoreLocation = {
-    /**
-     * The name of domain.  Defaults to "default"
-     */
-    domain?: string;
-    /**
-     * The action.  Defaults to the url.
-     */
-    action?: string;
-    /**
-     * The method.  Defaults to the rest method (put, post, get, etc)
-     */
-    method?: string;
-    /**
-     * If multiple > generates uuid.
-     */
-    uuid?: string;
-};
 
 type RequestOptions<Data = any> = {
     /**
@@ -91,7 +73,7 @@ type InjectResponse<Request> = {
  * Request: the initial request that is passed in.
  * Response: the final data that comes out.
  */
-type UseRestOptions<
+export type UseRestOptions<
     Request = any,
     Response = any
 > = RequestOptions<Response> & {
@@ -140,37 +122,61 @@ type UseRestOptions<
     uuid?: string;
 };
 
-/**
- * Gets the location in order of preference:
- * 1.
- */
-const DOMAIN = '';
+export function getRest(domain: string) {
+    function rest<Request = any, Response = any>(
+        options: UseRestOptions<Request, Response>
+    ) {
+        /**
+         * Generates uuid if multiple.  Prioritize explicit defined uuid.
+         */
+        const uuid = (() => {
+            if (options.uuid) return options.uuid;
+            if (options.multiple) return uuidv4();
+            return undefined;
+        })();
 
-export function rest<Request = any, Response = any>(
-    options: UseRestOptions<Request, Response>
-) {
-    /**
-     * Generates uuid if multiple.  Prioritize explicit defined uuid.
-     */
-    const uuid = (() => {
-        if (options.uuid) return options.uuid;
-        if (options.multiple) return uuidv4();
-        return undefined;
-    })();
+        /**
+         * Gets initial storeLocation.  Prioritize "storeLocation" prop.
+         */
+        const storeLocation: StoreLocation = getInitialStoreLocation(
+            {
+                domain,
+                action: options.url,
+                method: options.method,
+                uuid
+            },
+            options.storeLocation
+        );
 
-    /**
-     * Gets initial storeLocation.  Prioritize "storeLocation" prop.
-     */
-    const storeLocation: StoreLocation = (() => {
-        if (typeof options.storeLocation === 'string') {
-            return parseStringStoreLocation(options.storeLocation);
+        /**
+         * Do not progress if storeLocation is invalid.
+         */
+        if (
+            !storeLocation.domain ||
+            !storeLocation.action ||
+            !storeLocation.method
+        ) {
+            throw new Error(
+                `Something went wrong.  Location not defined properly: ${JSON.stringify(
+                    storeLocation
+                )}`
+            );
         }
-        return {
-            domain: DOMAIN,
-            action: options.url,
-            method: options.method,
-            uuid,
-            ...options.storeLocation
+
+        const execute = async (
+            request: Request
+        ): Promise<
+            [
+                string | undefined,
+                Request | undefined,
+                AxiosRespose<any> | undefined
+            ]
+        > => {
+            try {
+            } catch (err) {}
         };
-    })();
+
+        return true;
+    }
+    return rest;
 }

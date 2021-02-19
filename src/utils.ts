@@ -70,7 +70,10 @@ export const assocPath = _assocPath;
  * @returns {boolean}
  */
 export function isObject(item: any) {
-    return item && typeof item === 'object' && !Array.isArray(item);
+    if (!item) return false;
+    if (Array.isArray(item)) return false;
+    if (item instanceof Date) return false;
+    return typeof item === 'object';
 }
 
 /**

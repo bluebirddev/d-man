@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { v4 as uuidv4 } from 'uuid';
 import { addMilliseconds, fromUnixTime, isBefore } from 'date-fns';
 import { Store } from 'redux';
-import { parseStoreState, wait } from '../utils';
+import { deepEqual, parseStoreState, wait } from '../utils';
 import { RootState, StoreState } from '../store/reducer';
 import getGenerator, { GetOptions } from './get-generator';
 import { GenericGeneratorResult } from './generic-generator';
@@ -23,6 +23,14 @@ export type GetHookOptions = {
     lazy?: boolean;
 };
 
+const usePrevious = (value: any) => {
+    const ref = useRef();
+    useEffect(() => {
+        ref.current = value;
+    });
+    return ref.current;
+};
+
 export default function getHookGenerator(
     domain: string,
     domainOptions: DomainOptions,
@@ -30,7 +38,10 @@ export default function getHookGenerator(
 ) {
     return function useGet<Res = any, Req = any>(
         action: string,
-        options: GetHookOptions & GetOptions<Res, Req> = {}
+        options: Omit<
+            GetHookOptions & GetOptions<Res, Req>,
+            'transformRequest'
+        > = {}
     ): GetHookResult<Req, Res> {
         const uuid = useMemo(() => {
             return options.multiple ? uuidv4() : undefined;
@@ -92,15 +103,26 @@ export default function getHookGenerator(
             }
         }, [options.interval, storeState?.lastUpdated, get]);
 
-        /**
-         * If mounted, and not lazy -> refresh
-         */
+        const previousProps = usePrevious({ action, options });
+
         useEffect(() => {
-            if (!options.lazy && !storeState?.executed) {
-                get.execute();
+            /**
+             * If mounted, and not lazy -> refresh
+             */
+            if (!options.lazy) {
+                if (!storeState?.executed) {
+                    get.execute();
+                } else {
+                    const propsEqual = deepEqual(
+                        { action, options },
+                        previousProps
+                    );
+                    if (!propsEqual) {
+                        get.execute();
+                    }
+                }
             }
-            // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [options.lazy, get.execute, storeState]);
+        });
 
         /**
          * Triggers interval.

@@ -96,3 +96,55 @@ export function mergeDeep<T>(target: any, ...sources: any): T {
 
     return mergeDeep(target, ...sources);
 }
+
+export function deepEqual(x: any, y: any) {
+    if (x === y) {
+        return true;
+    }
+    if (
+        typeof x === 'object' &&
+        x != null &&
+        typeof y === 'object' &&
+        y != null
+    ) {
+        if (Object.keys(x).length !== Object.keys(y).length) return false;
+
+        // eslint-disable-next-line no-restricted-syntax
+        for (const prop in x) {
+            // eslint-disable-next-line no-prototype-builtins
+            if (y.hasOwnProperty(prop)) {
+                if (!deepEqual(x[prop], y[prop])) return false;
+            } else return false;
+        }
+
+        return true;
+    }
+    return false;
+}
+
+export function filterRecord<T>(
+    record: Record<string, T>,
+    func: (item: T, key: string, i: number) => boolean
+): Record<string, T> {
+    if (!isObject(record)) return record;
+    return Object.keys(record).reduce((res, key, i) => {
+        const value = record[key];
+        if (!func(value, key, i)) return res;
+        res[key] = value;
+        return res;
+    }, {});
+}
+
+/**
+ * Returns something that is "empty".
+ */
+export function isEmpty(value: any) {
+    return value === null || value === undefined || value === '';
+}
+
+/**
+ * Strips empty values from objects.
+ */
+export function stripEmpty<T>(record: Record<string, T>): Record<string, T> {
+    return filterRecord(record, (value) => !isEmpty(value));
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { createDMan } from 'd-man';
 
@@ -17,7 +17,14 @@ function useDummyPost() {
 }
 
 const Todos = () => {
-  const { data: todos, loading, execute: refreshTodos } = domain.useGet('/todos');
+  const [times, setTimes] = useState(0);
+  const { data: todos, loading } = domain.useGet('/todos?bla=2', {
+    requestConfig: {
+        queryParams: {
+          times
+        },
+    },
+  });
   const { data: counter, dispatch } = useCounter();
   const dummyPost = useDummyPost();
 
@@ -31,7 +38,7 @@ const Todos = () => {
       <button type="button" style={{ marginLeft: 10 }} onClick={() => dispatch(counter + 1)}>+1</button>
       <hr />
       <button type="button" onClick={() => dummyPost.execute()}>Execute dummy post</button>
-      <button type="button" onClick={() => refreshTodos()}>Refresh data</button>
+      <button type="button" onClick={() => {setTimes(times + 1);}}>Refresh data</button>
     <table>
       <thead>
         <tr>

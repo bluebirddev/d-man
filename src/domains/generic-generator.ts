@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import { Store } from 'redux';
 import { RootState, StoreState } from '../store/reducer';
@@ -73,7 +73,9 @@ export type GenericGeneratorResult<Req, Res> = {
     getState: () => StoreState<Res>;
     execute: (
         data?: Req | undefined
-    ) => Promise<[string | undefined, Res | undefined]>;
+    ) => Promise<
+        [string | undefined, Res | undefined, AxiosResponse<any> | undefined]
+    >;
     reset: () => void;
 };
 
@@ -125,7 +127,9 @@ export default function genericGenerator<Req = any, Res = any>(
 
     const execute = async (
         requestData?: Req
-    ): Promise<[string | undefined, Res | undefined]> => {
+    ): Promise<
+        [string | undefined, Res | undefined, AxiosResponse<any> | undefined]
+    > => {
         try {
             dispatch({ type: `${storeLocationPath.join('|')}|loading` });
 
@@ -170,7 +174,7 @@ export default function genericGenerator<Req = any, Res = any>(
                 });
             }
 
-            const responseData = await (async () => {
+            const response = await (async () => {
                 if (options.fake) {
                     await wait(options.fake);
                     return undefined;
@@ -182,11 +186,10 @@ export default function genericGenerator<Req = any, Res = any>(
                         domainOptions.useRequestInterceptor.onError
                     );
                 }
-                const response = await instance(
-                    convertToAxiosRequest(requestConfig)
-                );
-                return response.data;
+                return instance(convertToAxiosRequest(requestConfig));
             })();
+
+            const responseData = response?.data;
 
             if (options.injectResponse) {
                 options.injectResponse.forEach((injector) => {
@@ -231,7 +234,7 @@ export default function genericGenerator<Req = any, Res = any>(
                 payload: parsedResponseData
             });
 
-            return [undefined, responseData];
+            return [undefined, responseData, response];
         } catch (_error) {
             const error = parseError(_error);
 
@@ -240,7 +243,7 @@ export default function genericGenerator<Req = any, Res = any>(
                 payload: error
             });
 
-            return [error, undefined];
+            return [error, undefined, undefined];
         }
     };
 

@@ -1,4 +1,13 @@
-import { isEmpty, filterRecord, stripEmpty, isObject } from './utils';
+import {
+    isEmpty,
+    filterRecord,
+    stripEmpty,
+    isObject,
+    stringReplace,
+    normalizePath,
+    mergeUrl,
+    trimDash
+} from './utils';
 
 describe('utils', () => {
     it('"isEmpty" \'\'', () => {
@@ -55,5 +64,77 @@ describe('utils', () => {
     });
     it('"isObject" date', () => {
         expect(isObject(new Date())).toEqual(false);
+    });
+
+    it('"stringReplace" simple', () => {
+        expect(
+            stringReplace(
+                'https://example.com/users/{id}/details?name={name}',
+                { id: 2, name: 'cj' }
+            )
+        ).toEqual('https://example.com/users/2/details?name=cj');
+    });
+
+    it('"stringReplace" multiple', () => {
+        expect(
+            stringReplace('https://example.com/users/{id}/details?id={id}', {
+                id: 2
+            })
+        ).toEqual('https://example.com/users/2/details?id=2');
+    });
+
+    it('"stringReplace" different comparer', () => {
+        expect(
+            stringReplace(
+                'https://example.com/users/:id/details',
+                {
+                    id: 2
+                },
+                (key) => `:${key}`
+            )
+        ).toEqual('https://example.com/users/2/details');
+    });
+
+    it('"normalizePath" 0', () => {
+        expect(normalizePath('/')).toEqual('');
+    });
+    it('"normalizePath" 1', () => {
+        expect(normalizePath('/0')).toEqual('0');
+    });
+    it('"normalizePath" 2', () => {
+        expect(normalizePath('/0/')).toEqual('0');
+    });
+    it('"normalizePath" 3', () => {
+        expect(normalizePath('0')).toEqual('0');
+    });
+    it('"normalizePath" 4', () => {
+        expect(normalizePath('0/')).toEqual('0');
+    });
+    it('"normalizePath" 5', () => {
+        expect(normalizePath('/0/1')).toEqual('0/1');
+    });
+    it('"normalizePath" 6', () => {
+        expect(normalizePath('/0/1/2/')).toEqual('0/1/2');
+    });
+    it('"normalizePath" 7', () => {
+        expect(normalizePath('/0/1/2////3/')).toEqual('0/1/2/3');
+    });
+
+    it('"trimDash" url', () => {
+        expect(trimDash('https://example.com/')).toEqual('https://example.com');
+    });
+    it('"trimDash" front and back', () => {
+        expect(trimDash('////example.com//')).toEqual('example.com');
+    });
+
+    it('"mergeUrl"', () => {
+        expect(mergeUrl('https://example.com/', '/bla')).toEqual(
+            'https://example.com/bla'
+        );
+    });
+    it('"mergeUrl" just first', () => {
+        expect(mergeUrl('https://example.com/', '')).toEqual(
+            'https://example.com'
+        );
     });
 });

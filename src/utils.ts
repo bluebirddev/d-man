@@ -151,3 +151,36 @@ export function isEmpty(value: any) {
 export function stripEmpty<T>(record: Record<string, T>): Record<string, T> {
     return filterRecord(record, (value) => !isEmpty(value));
 }
+
+/**
+ * Replaces parameters within a string like:
+ * give string: https://example.com/users/{id}/details?name={name}
+ * and replacements: { id: 2, name: 'cj' } results in:
+ * https://example.com/users/2/details?name=cj
+ */
+export function stringReplace(
+    str: string,
+    replacements: Record<string, string | number>,
+    comparer: (key: string) => string = (key: string) => `{${key}}`
+) {
+    return Object.keys(replacements).reduce<string>((res, key) => {
+        const replacement = replacements[key];
+        return res.replace(
+            new RegExp(comparer(key), 'g'),
+            replacement?.toString() || ''
+        );
+    }, str);
+}
+
+export function trimDash(str?: string): string | undefined {
+    if (!str) return str;
+    if (str[str.length - 1] === '/') return trimDash(str.slice(0, -1));
+    if (str[0] === '/') return trimDash(str.slice(1));
+    return str;
+}
+export function mergeUrl(a?: string, b?: string) {
+    if (!a && !b) return '';
+    if (!a) return trimDash(b);
+    if (!b) return trimDash(a);
+    return `${trimDash(a)}/${trimDash(b)}`;
+}

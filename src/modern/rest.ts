@@ -1,7 +1,11 @@
-import { StoreState } from '../store/reducer';
+import { axiosExecutor } from './axios-executor';
+import { execute } from './execute';
 
 export type Method = 'get' | 'post' | 'put' | 'delete' | 'patch';
 
+/**
+ * The options you pass in to change the request.
+ */
 export type RequestOptions<Data = any> = {
     /**
      * Basic rest options - get, post, put, etc.
@@ -39,72 +43,85 @@ export type RequestOptions<Data = any> = {
 };
 
 /**
- * request is "post" transformRequest.
+ * The same as RequestOptions, except this is after all the RequestOptions have been transformed and validated.
  */
-type InjectRequest<Request> = (request: Request) => unknown;
+export type AfterTransformRequestOptions = Omit<
+    RequestOptions,
+    'urlParams' | 'baseUrl'
+>;
 
 /**
- * request is before transformRequest.
- * response is before transformResponse.
+ * Complete rest response.
  */
-type InjectResponse<Request> = (
-    response: unknown,
-    request: Request,
-    storeState: StoreState<any>
-) => unknown;
+export type RestResponse<ResponseData = any> = {
+    error?: string | undefined;
+    data?: ResponseData;
+    requestOptions: AfterTransformRequestOptions;
+    status?: number;
+    statusText?: string;
+    headers?: Record<string, string | number>;
+};
+
+export type UseRequestInterceptor = {
+    onSuccess: (value: any) => any | Promise<any>;
+    onError: (error: any) => any;
+};
 
 /**
  * Request: the initial request that is passed in.
  * Response: the final data that comes out.
  */
-export type UseRestOptions<Request = any, Response = any> = Omit<
-    RequestOptions<Response>,
+export type RestOptions<RequestData = any, ResponseData = any> = Omit<
+    RequestOptions<ResponseData>,
     'data'
 > & {
     /**
      * Before submit, transforms request.  It will replace any options already defined.
      */
     transformRequest?: (
-        request: Request,
+        requestData: RequestData,
         requestOptions: RequestOptions
     ) => RequestOptions;
     /**
      * After submit, transforms response data.
      */
-    transformResponseData?: (
-        response: unknown,
-        requestOptions: RequestOptions
-    ) => Response;
+    transformResponseData?: (response: RestResponse) => ResponseData;
     /**
-     * Before executing, injects the result of "transformer" at the "storeLocation".
-     * Used for optimistic updates.
+     * After transform request.
      */
-    injectRequest?: InjectRequest<Request> | InjectRequest<Request>[];
+    beforeExecute?: (
+        requestOptions: AfterTransformRequestOptions
+    ) => void | Promise<void>;
     /**
-     * After executing, injects the result of "transformer" at the "storeLocation".
-     * Used for post execution updates.
+     * After transform response.
      */
-    injectResponse?: InjectResponse<Request> | InjectResponse<Request>[];
+    afterExecute?: (response: RestResponse) => void | Promise<void>;
     /**
-     *
+     * Side effect interceptor that has no affect on the rest of the flow.
      */
-    preExecute?: () => void;
+    useRequestInterceptor?: UseRequestInterceptor;
+    /**
+     * Parse error that occurs after apiExecute
+     */
+    parseError?: (error: any) => any;
 };
 
-export function rest<Request = any, Response = any>(
-    options: UseRestOptions<Request, Response>
-) {
-    const execute = async (
-        request: Request
-    ): Promise<
-        [string | undefined, Request | undefined, AxiosRespose<any> | undefined]
-    > => {
-        try {
-            if (options.preExecute) {
-                options.preExecute();
-            }
-        } catch (err) {}
-    };
+/**
+ * The function that will actually make the api call.
+ */
+export type ApiExecutor = (
+    requestOptions: AfterTransformRequestOptions,
+    parseError?: (error: any) => any,
+    useRequestInterceptor?: UseRequestInterceptor
+) => Promise<RestResponse>;
 
-    return true;
+export function rest<RequestData = any, ResponseData = any>(
+    requestData: RequestData,
+    restOptions: RestOptions<RequestData, ResponseData>
+) {
+    return execute<RequestData, ResponseData>(
+        requestData,
+        restOptions,
+        axiosExecutor
+    );
 }

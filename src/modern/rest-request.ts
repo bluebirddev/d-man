@@ -1,24 +1,26 @@
 import { mergeUrl, stringReplace, stripEmpty, trimDash } from '../utils';
-import { UseRestOptions, RequestOptions } from './rest';
+import {
+    RestOptions,
+    RequestOptions,
+    AfterTransformRequestOptions
+} from './rest';
 
-type AxiosRequestOptions = Omit<RequestOptions<any>, 'urlParams' | 'baseUrl'>;
-
-export function getRequestOptions<Request, Response>(
-    request: Request,
-    options: UseRestOptions<Request, Response>
-): AxiosRequestOptions {
+export function getRequestOptions<RequestData, ResponseData>(
+    requestData: RequestData,
+    restOptions: RestOptions<RequestData, ResponseData>
+): AfterTransformRequestOptions {
     const requestOptions: RequestOptions<any> = {
-        method: options.method,
-        url: options.url,
-        baseUrl: options.baseUrl,
-        queryParams: options.queryParams,
-        data: request,
-        headers: options.headers
+        method: restOptions.method,
+        url: restOptions.url,
+        baseUrl: restOptions.baseUrl,
+        queryParams: restOptions.queryParams,
+        data: requestData,
+        headers: restOptions.headers
     };
 
     const transformedRequest =
-        options.transformRequest &&
-        options.transformRequest(request, requestOptions);
+        restOptions.transformRequest &&
+        restOptions.transformRequest(requestData, requestOptions);
 
     const { urlParams, baseUrl, ...shallowMergedRequest } = {
         ...requestOptions,
@@ -48,5 +50,5 @@ export function getRequestOptions<Request, Response>(
     return stripEmpty({
         ...shallowMergedRequest,
         url
-    }) as AxiosRequestOptions;
+    }) as AfterTransformRequestOptions;
 }

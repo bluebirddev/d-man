@@ -30,7 +30,10 @@ export default function getHookGenerator(
 ) {
     return function useGet<Res = any, Req = any>(
         action: string,
-        options: GetHookOptions & GetOptions<Res, Req> = {}
+        options: Omit<
+            GetHookOptions & GetOptions<Res, Req>,
+            'transformRequest'
+        > = {}
     ): GetHookResult<Req, Res> {
         const uuid = useMemo(() => {
             return options.multiple ? uuidv4() : undefined;

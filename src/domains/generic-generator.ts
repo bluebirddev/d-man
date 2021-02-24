@@ -3,7 +3,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { Store } from 'redux';
 import { RootState, StoreState } from '../store/reducer';
 import { BaseOptions, DManAxiosRequestConfig } from '..';
-import { mergeDeep, parseError, parseStoreState, path, wait } from '../utils';
+import {
+    has,
+    mergeDeep,
+    parseError,
+    parseStoreState,
+    path,
+    wait
+} from '../utils';
 import {
     getStoreLocation,
     Method,
@@ -55,13 +62,15 @@ function parseRequest<Req, Res>(
                     transformedRequest.urlParams &&
                     transformedRequest.urlParams[key];
                 return res.replaceAll(`:${key}`, replacement?.toString() || '');
-            }, '');
+            }, transformedRequest.url || url);
         }
 
-        return mergeDeep(
-            requestConfig,
-            transformedRequest
-        ) as Partial<DManAxiosRequestConfig>;
+        return {
+            ...mergeDeep(requestConfig, transformedRequest),
+            data: has('data', transformedRequest)
+                ? transformedRequest.data
+                : requestConfig.data
+        } as Partial<DManAxiosRequestConfig>;
     }
 
     return requestConfig;

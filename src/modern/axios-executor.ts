@@ -38,10 +38,13 @@ export async function axiosExecutor(
         };
     } catch (err) {
         const parsedError = (parseError || defaultParseError)(err);
-        // TODO: get status statusText headers here.
         return {
             error: parsedError,
-            requestOptions
+            requestOptions,
+            status: err?.response?.status,
+            statusText: err?.response?.statusText,
+            headers: err?.response?.headers,
+            data: err?.response.data
         };
         //
     }

@@ -1,68 +1,82 @@
-import React, { useState } from 'react';
+import { useEffect } from 'react';
 
-import { createDMan } from 'd-man';
+import { rest } from 'd-man';
 
-const { Provider, domain, useLocal } = createDMan({
-  domain: {
-    baseURL: 'https://jsonplaceholder.typicode.com',
-  },
-});
+export default function App() {
+  useEffect(() => {
+    (async () => {
+      const res = await rest(undefined, {
+        url: 'https://jsonplaceholder.typicode.com/tosdfdos',
+        method: 'get',
+      });
+      console.log(res);
+    })();
+  }, []);
 
-function useCounter() {
-  return useLocal('counter', 0);
+  return <div>bla</div>
 }
 
-function useDummyPost() {
-  return domain.usePost('/dummy', { fake: 10000, multiple: true });
-}
+// const { Provider, domain, useLocal } = createDMan({
+//   domain: {
+//     baseURL: 'https://jsonplaceholder.typicode.com',
+//   },
+// });
 
-const Todos = () => {
-  const [times, setTimes] = useState(0);
-  const { data: todos, loading } = domain.useGet('/todos?bla=2', {
-    requestConfig: {
-        queryParams: {
-          times
-        },
-    },
-  });
-  const { data: counter, dispatch } = useCounter();
-  const dummyPost = useDummyPost();
+// function useCounter() {
+//   return useLocal('counter', 0);
+// }
 
-  if (loading) {
-    return <div>Loading...</div>
-  }
+// function useDummyPost() {
+//   return domain.usePost('/dummy', { fake: 10000, multiple: true });
+// }
 
-  return (
-    <div>
-      Local counter: {counter}
-      <button type="button" style={{ marginLeft: 10 }} onClick={() => dispatch(counter + 1)}>+1</button>
-      <hr />
-      <button type="button" onClick={() => dummyPost.execute()}>Execute dummy post</button>
-      <button type="button" onClick={() => {setTimes(times + 1);}}>Refresh data</button>
-    <table>
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Completed</th>
-        </tr>
-      </thead>
-      <tbody>
-        {todos.map((todo: any) => (
-          <tr key={todo.id}>
-            <td>{todo.title}</td>
-            <td>{todo.completed && 'X'}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-    </div>
-  );
-};
+// const Todos = () => {
+//   const [times, setTimes] = useState(0);
+//   const { data: todos, loading } = domain.useGet('/todos?bla=2', {
+//     requestConfig: {
+//         queryParams: {
+//           times
+//         },
+//     },
+//   });
+//   const { data: counter, dispatch } = useCounter();
+//   const dummyPost = useDummyPost();
 
-const App = () => (
-  <Provider>
-    <Todos />
-  </Provider>
-);
+//   if (loading) {
+//     return <div>Loading...</div>
+//   }
 
-export default App;
+//   return (
+//     <div>
+//       Local counter: {counter}
+//       <button type="button" style={{ marginLeft: 10 }} onClick={() => dispatch(counter + 1)}>+1</button>
+//       <hr />
+//       <button type="button" onClick={() => dummyPost.execute()}>Execute dummy post</button>
+//       <button type="button" onClick={() => {setTimes(times + 1);}}>Refresh data</button>
+//     <table>
+//       <thead>
+//         <tr>
+//           <th>Title</th>
+//           <th>Completed</th>
+//         </tr>
+//       </thead>
+//       <tbody>
+//         {todos.map((todo: any) => (
+//           <tr key={todo.id}>
+//             <td>{todo.title}</td>
+//             <td>{todo.completed && 'X'}</td>
+//           </tr>
+//         ))}
+//       </tbody>
+//     </table>
+//     </div>
+//   );
+// };
+
+// const App = () => (
+//   <Provider>
+//     <Todos />
+//   </Provider>
+// );
+
+// export default App;

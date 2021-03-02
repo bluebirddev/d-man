@@ -27,8 +27,8 @@ export type DomainOptions = {
      * Axios interceptors
      */
     useRequestInterceptor?: {
-        onSuccess: (value: any) => any | Promise<any>;
-        onError: (error: any) => any;
+        onSuccess?: (value: any) => any | Promise<any>;
+        onError?: (error: any) => any;
     };
 };
 

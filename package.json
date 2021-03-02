@@ -1,6 +1,6 @@
 {
   "name": "d-man",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "Apollo inspired library to connect redux, local-storage, and rest domains seamlessly.",
   "author": "vssrcj",
   "license": "MIT",

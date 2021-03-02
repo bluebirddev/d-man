@@ -3,7 +3,7 @@ import { normalizePath } from './utils';
 export type Method = 'get' | 'post' | 'put' | 'delete';
 
 export type StoreLocation = {
-    domain: string;
+    domain?: string;
     action?: string;
     method?: Method;
     uuid?: string;
@@ -36,7 +36,7 @@ export function convertToStoreLocationPath(
 ) {
     if (!storeLocation) return undefined;
     return trimStoreLocationPath([
-        storeLocation.domain,
+        storeLocation.domain as string,
         normalizePath(storeLocation.action as string),
         storeLocation.method as string,
         storeLocation.uuid as string

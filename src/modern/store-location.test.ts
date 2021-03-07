@@ -1,8 +1,5 @@
 import { StoreLocation } from '../store-location';
-import {
-    parseStringStoreLocation,
-    getInitialStoreLocation
-} from './store-location';
+import { parseStringStoreLocation, parseStoreLocation } from './store-location';
 
 describe('store-location', () => {
     it('"parseStringStoreLocation" empty', () => {
@@ -34,12 +31,12 @@ describe('store-location', () => {
         uuid: 'd'
     };
 
-    it('"getInitialStoreLocation" just default', () => {
-        const storeLocation = getInitialStoreLocation(defaultStoreLocation);
+    it('"parseStoreLocation" just default', () => {
+        const storeLocation = parseStoreLocation(defaultStoreLocation);
         expect(storeLocation).toEqual(defaultStoreLocation);
     });
-    it('"getInitialStoreLocation" string complete replace', () => {
-        const storeLocation = getInitialStoreLocation(
+    it('"parseStoreLocation" string complete replace', () => {
+        const storeLocation = parseStoreLocation(
             defaultStoreLocation,
             'a|b||d'
         );
@@ -49,8 +46,20 @@ describe('store-location', () => {
             uuid: 'd'
         });
     });
-    it('"getInitialStoreLocation" merge', () => {
-        const storeLocation = getInitialStoreLocation(defaultStoreLocation, {
+    it('"parseStoreLocation" merge', () => {
+        const storeLocation = parseStoreLocation(defaultStoreLocation, {
+            domain: 'A',
+            method: 'post'
+        });
+        expect(storeLocation).toEqual({
+            domain: 'A',
+            action: 'b',
+            method: 'post',
+            uuid: 'd'
+        });
+    });
+    it('"parseStoreLocation" merge with string', () => {
+        const storeLocation = parseStoreLocation('a|b|c|d', {
             domain: 'A',
             method: 'post'
         });

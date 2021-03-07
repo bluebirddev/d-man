@@ -1,6 +1,8 @@
 import { stripEmpty } from '../utils';
 import { Method } from './rest';
 
+const SEPERATOR = '|';
+
 export type StoreLocation = {
     /**
      * The name of domain.  Defaults to "default"
@@ -20,28 +22,48 @@ export type StoreLocation = {
     uuid?: string;
 };
 
+export enum StoreLocationModifier {
+    data = 'data',
+    loading = 'loading',
+    error = 'error'
+}
+
 export function parseStringStoreLocation(
     storeLocationString: string
 ): StoreLocation {
     const [domain, action, method, uuid] = (storeLocationString || '').split(
-        '|'
+        SEPERATOR
     );
     return stripEmpty({ domain, action, method: method as Method, uuid });
 }
 
-export function getInitialStoreLocation(
-    defaultStoreLocation: StoreLocation,
+export function appendToStoreLocation(
+    storeLocation: StoreLocation,
+    appender: string
+) {
+    return [...(storeLocation as string[]), appender].join(SEPERATOR);
+}
+
+export function parseStoreLocation(
+    defaultStoreLocation: StoreLocation | string,
     overwriteStoreLocation?: StoreLocation | string
 ) {
-    if (!overwriteStoreLocation) return defaultStoreLocation;
+    const defaultStoreLocationObject =
+        typeof defaultStoreLocation === 'string'
+            ? parseStringStoreLocation(defaultStoreLocation)
+            : defaultStoreLocation;
+
+    if (!overwriteStoreLocation) {
+        return defaultStoreLocationObject;
+    }
     if (typeof overwriteStoreLocation === 'string') {
         return parseStringStoreLocation(overwriteStoreLocation);
     }
     return {
-        domain: defaultStoreLocation.domain,
-        action: defaultStoreLocation.action,
-        method: defaultStoreLocation.method,
-        uuid: defaultStoreLocation.uuid,
+        domain: defaultStoreLocationObject.domain,
+        action: defaultStoreLocationObject.action,
+        method: defaultStoreLocationObject.method,
+        uuid: defaultStoreLocationObject.uuid,
         ...overwriteStoreLocation
     };
 }

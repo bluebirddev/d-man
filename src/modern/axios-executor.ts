@@ -15,6 +15,12 @@ function defaultParseError(error: any) {
     }
 }
 
+/**
+ * The axios implementation of the executor.
+ *
+ * An exutor simply takes in the request paramaters and options, calls whatever method,
+ * and returns a promise.
+ */
 export async function axiosExecutor(
     requestOptions: AfterTransformRequestOptions,
     parseError?: (error: any) => any,
@@ -44,8 +50,7 @@ export async function axiosExecutor(
             status: err?.response?.status,
             statusText: err?.response?.statusText,
             headers: err?.response?.headers,
-            data: err?.response.data
+            data: err?.response?.data
         };
-        //
     }
 }

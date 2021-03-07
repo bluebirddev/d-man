@@ -1,9 +1,16 @@
+import { Store } from 'redux';
 import { v4 as uuidv4 } from 'uuid';
-import { StoreState } from '../store/reducer';
-import { AfterTransformRequestOptions, RestOptions } from './rest';
-import { StoreLocation, getInitialStoreLocation } from './store-location';
+import { RootState, StoreState } from '../store/reducer';
+import { performInjectRequests } from './injector';
+import {
+    AfterTransformRequestOptions,
+    rest,
+    RestOptions,
+    RestResponse
+} from './rest';
+import { StoreLocation, parseStoreLocation } from './store-location';
 
-type InjectRequest<RequestData> = {
+export type InjectRequest = {
     /**
      * If storeLocation is defined, then replace store response in that store location.
      * If storeLocation is not defined, store in default store location.
@@ -12,10 +19,7 @@ type InjectRequest<RequestData> = {
     /**
      * request is after transformRequest.
      */
-    transformer: (
-        requestData: RequestData,
-        storeState: StoreState<any>
-    ) => unknown;
+    transformer?: (requestData: any, storeState: StoreState<any>) => unknown;
 };
 
 type InjectResponse<RequestData> = {
@@ -47,12 +51,20 @@ export type StoreRestOptions<RequestData = any, ResponseData = any> = Omit<
      * Before executing, injects the result of "transformer" at the "storeLocation".
      * Used for optimistic updates.
      */
-    injectRequest?: InjectRequest<RequestData> | InjectRequest<RequestData>[];
+    injectRequest?: InjectRequest | InjectRequest[];
     /**
      * After executing, injects the result of "transformer" at the "storeLocation".
      * Used for post execution updates.
      */
     injectResponse?: InjectResponse<Request> | InjectResponse<Request>[];
+    /**
+     * Called after onSuccess.  Will await for result before continuing.
+     */
+    onSuccess?: (response: RestResponse<RequestData>) => Promise<void> | void;
+    /**
+     * Called after onError.  Will await for result before continuing.
+     */
+    onError?: (response: RestResponse<RequestData>) => Promise<void> | void;
     /**
      * If true - then create a uuid in the storeLocation.
      */
@@ -63,8 +75,8 @@ export type StoreRestOptions<RequestData = any, ResponseData = any> = Omit<
     uuid?: string;
 };
 
-export function getStoreRest(domain: string) {
-    function storeRest<RequestData = any, ResponseData = any>(
+export function getStoreRest(domain: string, store: Store<RootState>) {
+    async function storeRest<RequestData = any, ResponseData = any>(
         requestData: RequestData,
         storeRestOptions: StoreRestOptions<RequestData, ResponseData>
     ) {
@@ -80,7 +92,7 @@ export function getStoreRest(domain: string) {
         /**
          * Gets initial storeLocation.  Prioritize "storeLocation" prop.
          */
-        const storeLocation: StoreLocation = getInitialStoreLocation(
+        const storeLocation: StoreLocation = parseStoreLocation(
             {
                 domain,
                 action: storeRestOptions.url,
@@ -105,44 +117,26 @@ export function getStoreRest(domain: string) {
             );
         }
 
+        /**
+         * Injects request into store using "beforeExecute"
+         */
         const beforeExecute =
             storeRestOptions.injectRequest &&
             ((requestOptions: AfterTransformRequestOptions) => {
-                const injectRequests = (Array.isArray(
-                    storeRestOptions.injectRequest
-                )
-                    ? storeRestOptions.injectRequest
-                    : [
-                          storeRestOptions.injectRequest
-                      ]) as InjectRequest<RequestData>[];
-
-                injectRequests.forEach((injector) => {
-                    const injectLocation = getStoreLocation(
-                        storeLocation,
-                        injector.storeLocation
-                    );
-                    if (injectLocation) {
-                        const injectorSelector = (state: RootState) =>
-                            path<StoreState>(injectLocation, state);
-
-                        const injectorStoreState = parseStoreState<Res>(
-                            injectorSelector(store.getState())
-                        );
-
-                        const injectorData = injector.parseRequestData
-                            ? injector.parseRequestData(
-                                  injectorStoreState,
-                                  parsedRequestData
-                              )
-                            : parsedRequestData;
-
-                        dispatch({
-                            type: `${injectLocation.join('|')}|data`,
-                            payload: injectorData
-                        });
-                    }
-                });
+                performInjectRequests(
+                    store,
+                    storeLocation,
+                    storeRestOptions.injectRequest as
+                        | InjectRequest
+                        | InjectRequest[],
+                    requestOptions.data
+                );
             });
+
+        const restResult = await rest(requestData, {
+            ...storeRestOptions,
+            beforeExecute
+        });
     }
     return storeRest;
 }

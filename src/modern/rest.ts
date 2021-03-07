@@ -109,13 +109,13 @@ export type RestOptions<RequestData = any, ResponseData = any> = Omit<
 /**
  * The function that will actually make the api call.
  */
-export type ApiExecutor = (
+export type RestApiExecutor = (
     requestOptions: AfterTransformRequestOptions,
     parseError?: (error: any) => any,
     useRequestInterceptor?: UseRequestInterceptor
 ) => Promise<RestResponse>;
 
-export function rest<RequestData = any, ResponseData = any>(
+export async function rest<RequestData = any, ResponseData = any>(
     requestData: RequestData,
     restOptions: RestOptions<RequestData, ResponseData>
 ) {

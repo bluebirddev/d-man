@@ -1,11 +1,12 @@
-import { ApiExecutor, RestOptions, RestResponse } from './rest';
+import { RestApiExecutor, RestOptions, RestResponse } from './rest';
 import { getRequestOptions } from './rest-request';
 
 export async function execute<RequestData = any, ResponseData = any>(
     requestData: RequestData,
     restOptions: RestOptions<RequestData, ResponseData>,
-    apiExecutor: ApiExecutor
+    restApiExecutor: RestApiExecutor
 ): Promise<RestResponse<ResponseData>> {
+    // transforms request
     const requestOptions = getRequestOptions(requestData, restOptions);
 
     try {
@@ -15,7 +16,7 @@ export async function execute<RequestData = any, ResponseData = any>(
         }
 
         // execute
-        const restResponse = await apiExecutor(
+        const restResponse = await restApiExecutor(
             requestOptions,
             restOptions.parseError,
             restOptions.useRequestInterceptor

@@ -235,7 +235,7 @@ export default function genericGenerator<Req = any, Res = any>(
                 : responseData;
 
             if (options.onSuccess) {
-                await options.onSuccess(responseData, parsedRequestData);
+                await options.onSuccess(parsedResponseData, parsedRequestData);
             }
 
             dispatch({
@@ -252,7 +252,7 @@ export default function genericGenerator<Req = any, Res = any>(
                 payload: error
             });
 
-            return [error, undefined, undefined];
+            return [error, undefined, _error?.response];
         }
     };
 

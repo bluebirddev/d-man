@@ -37,11 +37,28 @@ export function parseStringStoreLocation(
     return stripEmpty({ domain, action, method: method as Method, uuid });
 }
 
-export function appendToStoreLocation(
+export function convertToPathStoreLocation(
+    storeLocation: StoreLocation
+): string[] {
+    const path = [];
+    if (storeLocation.domain) path.push(storeLocation.domain);
+    if (storeLocation.action) path.push(storeLocation.action);
+    if (storeLocation.method) path.push(storeLocation.method);
+    if (storeLocation.uuid) path.push(storeLocation.uuid);
+    return path;
+}
+
+export function convertToStringStoreLocation(storeLocation: StoreLocation) {
+    return convertToPathStoreLocation(storeLocation).join(SEPERATOR);
+}
+
+export function addStoreLocationModifier(
     storeLocation: StoreLocation,
-    appender: string
+    modifier: StoreLocationModifier
 ) {
-    return [...(storeLocation as string[]), appender].join(SEPERATOR);
+    return [convertToStringStoreLocation(storeLocation), modifier].join(
+        SEPERATOR
+    );
 }
 
 export function parseStoreLocation(

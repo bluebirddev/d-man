@@ -1,14 +1,21 @@
 import { Store } from 'redux';
 import { v4 as uuidv4 } from 'uuid';
 import { RootState, StoreState } from '../store/reducer';
-import { performInjectRequests } from './injector';
+import { axiosExecutor } from './axios-executor';
+import { performInjectRequests, performInjectResponses } from './injector';
 import {
     AfterTransformRequestOptions,
     rest,
+    RestApiExecutor,
     RestOptions,
     RestResponse
 } from './rest';
-import { StoreLocation, parseStoreLocation } from './store-location';
+import {
+    StoreLocation,
+    parseStoreLocation,
+    addStoreLocationModifier,
+    StoreLocationModifier
+} from './store-location';
 
 export type InjectRequest = {
     /**
@@ -22,7 +29,7 @@ export type InjectRequest = {
     transformer?: (requestData: any, storeState: StoreState<any>) => unknown;
 };
 
-type InjectResponse<RequestData> = {
+export type InjectResponse<RequestData> = {
     /**
      * If storeLocation is defined, then replace store response in that store location.
      * If storeLocation is not defined, store in default store location.
@@ -32,7 +39,7 @@ type InjectResponse<RequestData> = {
      * requestData is before transformRequest.
      * responseData is before transformResponse.
      */
-    transformer: (
+    transformer?: (
         responseData: unknown,
         requestData: RequestData,
         storeState: StoreState<any>
@@ -56,15 +63,15 @@ export type StoreRestOptions<RequestData = any, ResponseData = any> = Omit<
      * After executing, injects the result of "transformer" at the "storeLocation".
      * Used for post execution updates.
      */
-    injectResponse?: InjectResponse<Request> | InjectResponse<Request>[];
+    injectResponse?:
+        | InjectResponse<RequestData>
+        | InjectResponse<RequestData>[];
     /**
-     * Called after onSuccess.  Will await for result before continuing.
+     * Called after execute.  Will await for result before continuing.
      */
-    onSuccess?: (response: RestResponse<RequestData>) => Promise<void> | void;
-    /**
-     * Called after onError.  Will await for result before continuing.
-     */
-    onError?: (response: RestResponse<RequestData>) => Promise<void> | void;
+    afterExecute?: (
+        response: RestResponse<ResponseData>
+    ) => Promise<void> | void;
     /**
      * If true - then create a uuid in the storeLocation.
      */
@@ -78,7 +85,8 @@ export type StoreRestOptions<RequestData = any, ResponseData = any> = Omit<
 export function getStoreRest(domain: string, store: Store<RootState>) {
     async function storeRest<RequestData = any, ResponseData = any>(
         requestData: RequestData,
-        storeRestOptions: StoreRestOptions<RequestData, ResponseData>
+        storeRestOptions: StoreRestOptions<RequestData, ResponseData>,
+        restApiExecutor: RestApiExecutor = axiosExecutor
     ) {
         /**
          * Generates uuid if multiple.  Prioritize explicit defined uuid.
@@ -133,10 +141,63 @@ export function getStoreRest(domain: string, store: Store<RootState>) {
                 );
             });
 
-        const restResult = await rest(requestData, {
-            ...storeRestOptions,
-            beforeExecute
+        /**
+         * Injects request into store using "beforeExecute"
+         */
+        const afterExecute =
+            storeRestOptions.injectResponse &&
+            ((response: RestResponse) => {
+                performInjectResponses(
+                    store,
+                    storeLocation,
+                    storeRestOptions.injectResponse as
+                        | InjectResponse<RequestData>
+                        | InjectResponse<RequestData>[],
+                    response.data,
+                    response.requestOptions.data
+                );
+            });
+
+        store.dispatch({
+            type: addStoreLocationModifier(
+                storeLocation,
+                StoreLocationModifier.loading
+            )
         });
+
+        const restResult = await rest(
+            requestData,
+            {
+                ...storeRestOptions,
+                beforeExecute,
+                afterExecute
+            },
+            restApiExecutor
+        );
+
+        if (storeRestOptions.afterExecute) {
+            await storeRestOptions.afterExecute(restResult);
+        }
+
+        if (restResult.error) {
+            store.dispatch({
+                type: addStoreLocationModifier(
+                    storeLocation,
+                    StoreLocationModifier.error
+                ),
+                payload: restResult.error
+            });
+        } else {
+            store.dispatch({
+                type: addStoreLocationModifier(
+                    storeLocation,
+                    StoreLocationModifier.data
+                ),
+                payload: restResult.data
+            });
+        }
+
+        return restResult;
     }
     return storeRest;
 }

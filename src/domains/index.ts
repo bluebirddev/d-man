@@ -1,6 +1,7 @@
 import { createSelector } from 'reselect';
 import { useSelector } from 'react-redux';
 import { Store } from 'redux';
+import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { DomainState, RootState } from '../store/reducer';
 import postGenerator from './post-generator';
 import postHookGenerator from './post-hook-generator';
@@ -27,7 +28,11 @@ export type DomainOptions = {
      * Axios interceptors
      */
     useRequestInterceptor?: {
-        onSuccess?: (value: any) => any | Promise<any>;
+        onFullfilled?: (config: AxiosRequestConfig) => any | Promise<any>;
+        onError?: (error: any) => any;
+    };
+    useResponseInterceptor?: {
+        onSuccess?: (response: AxiosResponse<any>) => any | Promise<any>;
         onError?: (error: any) => any;
     };
 };

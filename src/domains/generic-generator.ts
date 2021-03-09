@@ -191,8 +191,14 @@ export default function genericGenerator<Req = any, Res = any>(
                 const instance = axios.create();
                 if (domainOptions.useRequestInterceptor) {
                     instance.interceptors.request.use(
-                        domainOptions.useRequestInterceptor.onSuccess,
+                        domainOptions.useRequestInterceptor.onFullfilled,
                         domainOptions.useRequestInterceptor.onError
+                    );
+                }
+                if (domainOptions.useResponseInterceptor) {
+                    instance.interceptors.response.use(
+                        domainOptions.useResponseInterceptor.onSuccess,
+                        domainOptions.useResponseInterceptor.onError
                     );
                 }
                 return instance(convertToAxiosRequest(requestConfig));

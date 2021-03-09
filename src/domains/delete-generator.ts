@@ -60,7 +60,7 @@ export default function deleteGenerator(
             store,
             uuid,
             action,
-            'get',
+            'delete',
             options
         );
 

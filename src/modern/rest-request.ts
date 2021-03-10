@@ -31,15 +31,17 @@ export function getRequestOptions<RequestData, ResponseData>(
         try {
             // merge baseUrl and url
             const fullUrl = mergeUrl(
-                shallowMergedRequest.url as string,
-                baseUrl
+                baseUrl,
+                shallowMergedRequest.url as string
             );
             // perform urlParams replacement (before new URL changes string to url friendly)
             const replacedUrl = urlParams
                 ? stringReplace(fullUrl as string, urlParams)
                 : fullUrl;
+
             // checks that valid url and makes url friendly
             const testedUrl = new URL(replacedUrl as string).href;
+
             // remove stupid back dashes
             return trimDash(testedUrl);
         } catch (err) {

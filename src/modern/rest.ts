@@ -62,8 +62,8 @@ export type RestResponse<ResponseData = any> = {
 };
 
 export type UseRequestInterceptor = {
-    onSuccess: (value: any) => any | Promise<any>;
-    onError: (error: any) => any;
+    onSuccess?: (value: any) => any | Promise<any>;
+    onError?: (error: any) => any;
 };
 
 /**
@@ -94,7 +94,9 @@ export type RestOptions<RequestData = any, ResponseData = any> = Omit<
     /**
      * After transform response.
      */
-    afterExecute?: (response: RestResponse) => void | Promise<void>;
+    afterExecute?: (
+        response: RestResponse<ResponseData>
+    ) => void | Promise<void>;
     /**
      * Side effect interceptor that has no affect on the rest of the flow.
      */

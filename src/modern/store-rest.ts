@@ -46,10 +46,10 @@ export type InjectResponse<RequestData> = {
     ) => unknown;
 };
 
-export type StoreRestOptions<RequestData = any, ResponseData = any> = Omit<
-    RestOptions<RequestData, ResponseData>,
-    'beforeExecute' | 'afterExecute'
-> & {
+export type StoreRestOptions<
+    RequestData = any,
+    ResponseData = any
+> = RestOptions<RequestData, ResponseData> & {
     /**
      * By default the storeLocation is - domain|action|method(|uuid)
      */
@@ -67,12 +67,6 @@ export type StoreRestOptions<RequestData = any, ResponseData = any> = Omit<
         | InjectResponse<RequestData>
         | InjectResponse<RequestData>[];
     /**
-     * Called after execute.  Will await for result before continuing.
-     */
-    afterExecute?: (
-        response: RestResponse<ResponseData>
-    ) => Promise<void> | void;
-    /**
      * If true - then create a uuid in the storeLocation.
      */
     multiple?: boolean;
@@ -82,11 +76,14 @@ export type StoreRestOptions<RequestData = any, ResponseData = any> = Omit<
     uuid?: string;
 };
 
-export function getStoreRest(domain: string, store: Store<RootState>) {
+export function getStoreRest(
+    domain: string,
+    store: Store<RootState>,
+    restApiExecutor: RestApiExecutor = axiosExecutor
+) {
     async function storeRest<RequestData = any, ResponseData = any>(
         requestData: RequestData,
-        storeRestOptions: StoreRestOptions<RequestData, ResponseData>,
-        restApiExecutor: RestApiExecutor = axiosExecutor
+        storeRestOptions: StoreRestOptions<RequestData, ResponseData>
     ) {
         /**
          * Generates uuid if multiple.  Prioritize explicit defined uuid.
@@ -128,35 +125,41 @@ export function getStoreRest(domain: string, store: Store<RootState>) {
         /**
          * Injects request into store using "beforeExecute"
          */
-        const beforeExecute =
-            storeRestOptions.injectRequest &&
-            ((requestOptions: AfterTransformRequestOptions) => {
-                performInjectRequests(
-                    store,
-                    storeLocation,
-                    storeRestOptions.injectRequest as
-                        | InjectRequest
-                        | InjectRequest[],
-                    requestOptions.data
-                );
-            });
+        const beforeExecute = storeRestOptions.injectRequest
+            ? async (requestOptions: AfterTransformRequestOptions) => {
+                  if (storeRestOptions.beforeExecute) {
+                      await storeRestOptions.beforeExecute(requestOptions);
+                  }
+                  performInjectRequests(
+                      store,
+                      storeLocation,
+                      storeRestOptions.injectRequest as
+                          | InjectRequest
+                          | InjectRequest[],
+                      requestOptions.data
+                  );
+              }
+            : storeRestOptions.beforeExecute;
 
         /**
          * Injects request into store using "beforeExecute"
          */
-        const afterExecute =
-            storeRestOptions.injectResponse &&
-            ((response: RestResponse) => {
-                performInjectResponses(
-                    store,
-                    storeLocation,
-                    storeRestOptions.injectResponse as
-                        | InjectResponse<RequestData>
-                        | InjectResponse<RequestData>[],
-                    response.data,
-                    response.requestOptions.data
-                );
-            });
+        const afterExecute = storeRestOptions.injectResponse
+            ? async (response: RestResponse) => {
+                  if (storeRestOptions.afterExecute) {
+                      await storeRestOptions.afterExecute(response);
+                  }
+                  performInjectResponses(
+                      store,
+                      storeLocation,
+                      storeRestOptions.injectResponse as
+                          | InjectResponse<RequestData>
+                          | InjectResponse<RequestData>[],
+                      response.data,
+                      response.requestOptions.data
+                  );
+              }
+            : storeRestOptions.afterExecute;
 
         store.dispatch({
             type: addStoreLocationModifier(

@@ -25,7 +25,8 @@ export type StoreLocation = {
 export enum StoreLocationModifier {
     data = 'data',
     loading = 'loading',
-    error = 'error'
+    error = 'error',
+    reset = 'reset'
 }
 
 export function parseStringStoreLocation(

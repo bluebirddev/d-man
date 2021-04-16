@@ -44,7 +44,7 @@ describe('store-rest', () => {
     it('"storeRest" e2e', async () => {
         let preChange = 10;
         let postChange = 20;
-        const response = await storeRest(2, {
+        const { execute, storeLocation, uuid } = storeRest(2, {
             method: location.method,
             url: location.action,
             baseUrl,
@@ -138,8 +138,18 @@ describe('store-rest', () => {
             uuid: '4444'
         });
 
+        const response = await execute();
+
         const state = store.getState();
 
+        expect(storeLocation).toEqual({
+            domain: 'otherdomain',
+            action: 'otheraction',
+            method: 'post',
+            uuid: '1234'
+        });
+        expect(uuid).toEqual('4444');
+        expect(response.data).toEqual(16);
         expect(
             state?.injectrequestdomain.injectrequestaction.delete['4321'].data
         ).toEqual(8);

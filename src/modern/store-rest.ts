@@ -1,6 +1,7 @@
 import { Store } from 'redux';
 import { v4 as uuidv4 } from 'uuid';
 import { RootState, StoreState } from '../store/reducer';
+import { path } from '../utils';
 import { axiosExecutor } from './axios-executor';
 import { performInjectRequests, performInjectResponses } from './injector';
 import {
@@ -14,7 +15,8 @@ import {
     StoreLocation,
     parseStoreLocation,
     addStoreLocationModifier,
-    StoreLocationModifier
+    StoreLocationModifier,
+    convertToPathStoreLocation
 } from './store-location';
 
 export type InjectRequest = {
@@ -81,7 +83,7 @@ export function getStoreRest(
     store: Store<RootState>,
     restApiExecutor: RestApiExecutor = axiosExecutor
 ) {
-    async function storeRest<RequestData = any, ResponseData = any>(
+    function storeRest<RequestData = any, ResponseData = any>(
         requestData: RequestData,
         storeRestOptions: StoreRestOptions<RequestData, ResponseData>
     ) {
@@ -106,6 +108,9 @@ export function getStoreRest(
             },
             storeRestOptions.storeLocation
         );
+
+        const selector = (state: RootState) =>
+            path<StoreState>(convertToPathStoreLocation(storeLocation), state);
 
         /**
          * Do not progress if storeLocation is invalid.
@@ -161,46 +166,50 @@ export function getStoreRest(
               }
             : storeRestOptions.afterExecute;
 
-        store.dispatch({
-            type: addStoreLocationModifier(
-                storeLocation,
-                StoreLocationModifier.loading
-            )
-        });
-
-        const restResult = await rest(
-            requestData,
-            {
-                ...storeRestOptions,
-                beforeExecute,
-                afterExecute
-            },
-            restApiExecutor
-        );
-
-        if (storeRestOptions.afterExecute) {
-            await storeRestOptions.afterExecute(restResult);
-        }
-
-        if (restResult.error) {
+        async function execute() {
             store.dispatch({
                 type: addStoreLocationModifier(
                     storeLocation,
-                    StoreLocationModifier.error
-                ),
-                payload: restResult.error
+                    StoreLocationModifier.loading
+                )
             });
-        } else {
-            store.dispatch({
-                type: addStoreLocationModifier(
-                    storeLocation,
-                    StoreLocationModifier.data
-                ),
-                payload: restResult.data
-            });
+
+            const restResult = await rest(
+                requestData,
+                {
+                    ...storeRestOptions,
+                    beforeExecute,
+                    afterExecute
+                },
+                restApiExecutor
+            );
+
+            if (storeRestOptions.afterExecute) {
+                await storeRestOptions.afterExecute(restResult);
+            }
+
+            if (restResult.error) {
+                store.dispatch({
+                    type: addStoreLocationModifier(
+                        storeLocation,
+                        StoreLocationModifier.error
+                    ),
+                    payload: restResult.error
+                });
+            } else {
+                store.dispatch({
+                    type: addStoreLocationModifier(
+                        storeLocation,
+                        StoreLocationModifier.data
+                    ),
+                    payload: restResult.data
+                });
+            }
+
+            return restResult;
         }
 
-        return restResult;
+        return { execute, uuid, storeLocation, selector };
     }
     return storeRest;
 }

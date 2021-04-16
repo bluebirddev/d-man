@@ -147,6 +147,10 @@ export function getRootReducer(initialState: RootState) {
             };
             return setState(props);
         }
+        if (action === 'reset') {
+            return setState(getDefaultState());
+        }
+        // TODO: should no action reset?
         if (!action) {
             return setState(getDefaultState());
         }

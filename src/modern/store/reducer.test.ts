@@ -29,6 +29,24 @@ describe('reducer', () => {
         expect(state).toEqual(rootState);
     });
 
+    it('"getRootReducer" resets state', () => {
+        const rootReducer = getRootReducer({
+            [location.domain as string]: {
+                [location.action as string]: {
+                    [location.method as string]: {
+                        ...storeState,
+                        loading: true,
+                        error: 'Some error'
+                    }
+                }
+            }
+        });
+        const state = rootReducer(undefined, {
+            type: 'reset'
+        });
+        expect(state).toEqual(rootState);
+    });
+
     it('"getRootReducer" removes LOCAL', () => {
         const rootReducer = getRootReducer({
             ...rootState,

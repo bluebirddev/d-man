@@ -14,7 +14,10 @@ import { getStoreRest, StoreRestOptions } from '../store-rest';
 import { RootState } from '../store/reducer';
 import { parseStoreState } from '../store/store';
 
-export type GetHookOptions = {
+export type GetHookOptions<ResponseData = any> = StoreRestOptions<
+    unknown,
+    ResponseData
+> & {
     /**
      * Will trigger every interval milliseconds.
      */
@@ -23,6 +26,10 @@ export type GetHookOptions = {
      * Will not execute on load.
      */
     lazy?: boolean;
+    // /**
+    //  * Hook won't re-trigger when a function changes, like "transformRequest". Pass in key
+    //  */
+    // key?: string;
 };
 
 const usePrevious = (value: any) => {
@@ -33,14 +40,13 @@ const usePrevious = (value: any) => {
     return ref.current;
 };
 
-export function useGetGenerator(
+export function getUseGet(
     domain: string,
     store: Store<RootState>,
     restApiExecutor: RestApiExecutor = axiosExecutor
 ) {
     function useGet<ResponseData = any>(
-        storeRestOptions: GetHookOptions &
-            StoreRestOptions<unknown, ResponseData>
+        storeRestOptions: GetHookOptions<ResponseData>
     ) {
         const storeRest = getStoreRest(
             domain,
@@ -64,7 +70,7 @@ export function useGetGenerator(
         const storeState = useSelector(storeRest.selector);
 
         const validStoreState = parseStoreState<ResponseData>(
-            storeState,
+            useSelector(storeRest.selector),
             storeRestOptions.lazy === true
         );
 
@@ -106,12 +112,12 @@ export function useGetGenerator(
                     storeRest.execute();
                 }
                 /**
-                 * Wait first to make sure onMoutned "refresh has not trigger"
+                 * Wait first to make sure onMounted "refresh has not trigger"
                  */
                 await wait(storeRestOptions.interval);
                 checkInterval();
             }
-        }, [storeRest, storeRestOptions.interval, storeState.lastUpdated]);
+        }, [storeRest, storeRestOptions.interval, storeState?.lastUpdated]);
 
         const previousProps = usePrevious({ storeRestOptions });
 

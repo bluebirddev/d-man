@@ -117,7 +117,9 @@ export function deepEqual(x: any, y: any) {
             // eslint-disable-next-line no-prototype-builtins
             if (y.hasOwnProperty(prop)) {
                 if (!deepEqual(x[prop], y[prop])) return false;
-            } else return false;
+            } else {
+                return false;
+            }
         }
 
         return true;

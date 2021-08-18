@@ -22,7 +22,7 @@ export function generateLocal(store: Store<RootState>) {
             action,
             persist
         ) as StoreLocationPath;
-        const [domain] = storeLocationPath;
+        const [domain, parsedAction] = storeLocationPath;
 
         const domainSelector = (state: RootState) => {
             return getPath<Record<string, any>>([domain], state);
@@ -30,8 +30,8 @@ export function generateLocal(store: Store<RootState>) {
 
         const selector = (state: RootState) => {
             const domainData = domainSelector(state);
-            return domainData && has(action, domainData)
-                ? domainData[action]
+            return domainData && parsedAction && has(parsedAction, domainData)
+                ? domainData[parsedAction]
                 : defaultValue;
         };
 

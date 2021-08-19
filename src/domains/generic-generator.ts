@@ -61,7 +61,10 @@ function parseRequest<Req, Res>(
                 const replacement =
                     transformedRequest.urlParams &&
                     transformedRequest.urlParams[key];
-                return res.replaceAll(`:${key}`, replacement?.toString() || '');
+                return res.replace(
+                    new RegExp(`:${key}`, 'g'),
+                    replacement?.toString() || ''
+                );
             }, transformedRequest.url || url);
         }
 

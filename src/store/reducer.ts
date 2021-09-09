@@ -47,18 +47,13 @@ export const getDefaultState = () => ({
     lastUpdated: getUnixTime(new Date())
 });
 
-export default function getRootReducer(localStorageKey: string) {
-    const cachedState = localStorage.getItem(localStorageKey);
-
-    const initialState: RootState = cachedState
-        ? (JSON.parse(cachedState) as RootState)
-        : {};
-
+export default function getRootReducer() {
     /**
      * Remove all cached "loading" states.  Maybe should remove all error states as well (forcing
      * refetch on refresh?)
      */
-    const parsedInitialState = (() => {
+    function parsedInitialState(initialState: RootState) {
+        // eslint-disable-next-line no-param-reassign
         delete initialState.LOCAL;
         const { 'LOCAL-PERSIST': localPersist, ...domainsState } = initialState;
 
@@ -82,16 +77,20 @@ export default function getRootReducer(localStorageKey: string) {
                 domainsState
             )
         };
-    })();
+    }
 
     function rootReducer(
-        state = parsedInitialState,
+        state = {},
         { type, payload }: { type: string; payload?: any }
     ): RootState {
         const [name, url, method, _uuid, _action] = type.split('|');
 
         if (name === 'LOGOUT') {
             return {};
+        }
+
+        if (name === 'INITIAL') {
+            return parsedInitialState(payload);
         }
 
         if (!name || !url) return state;

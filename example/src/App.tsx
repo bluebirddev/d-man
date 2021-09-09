@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { createDMan } from 'd-man';
 
 const { Provider, domain, useLocal } = createDMan({

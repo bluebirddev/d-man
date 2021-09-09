@@ -17,14 +17,7 @@
     "react-dom": "file:../node_modules/react-dom",
     "react-scripts": "file:../node_modules/react-scripts",
     "typescript": "file:../node_modules/typescript",
-    "d-man": "file:..",
-    "react-redux": "file:../node_modules/react-redux",
-    "redux": "file:../node_modules/redux",
-    "uuid": "file:../node_modules/uuid",
-    "ramda": "file:../node_modules/ramda",
-    "axios": "file:../node_modules/axios",
-    "reselect": "file:../node_modules/reselect",
-    "date-fns": "file:../node_modules/date-fns"
+    "d-man": "file:.."
   },
   "devDependencies": {
     "@babel/plugin-syntax-object-rest-spread": "^7.8.3"

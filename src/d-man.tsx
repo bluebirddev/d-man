@@ -1,5 +1,6 @@
 import React from 'react';
 import { Provider } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import {
     createDomain,
@@ -45,7 +46,7 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
     /**
      * Create domains based of DomainOption(s)
      */
-    const domains = (((() => {
+    const domains = (() => {
         if (!options.domains) {
             /**
              * If there is only one domain, it will still exist within "domains" with
@@ -75,7 +76,7 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
             },
             {}
         ) as Domains<T>;
-    })() as unknown) as any) as Domains<T>;
+    })() as unknown as any as Domains<T>;
 
     /**
      * Logs a user out.  May perform a logout function, like hitting an API before logging out completely
@@ -85,7 +86,11 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
         if (options.onLogout) {
             if (!(await options.onLogout())) return;
         }
-        localStorage.removeItem(localStorageKey);
+        try {
+            await AsyncStorage.removeItem(localStorageKey);
+        } catch (error) {
+            //
+        }
         store.dispatch({ type: 'LOGOUT' });
     }
 

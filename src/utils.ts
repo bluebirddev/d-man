@@ -30,7 +30,7 @@ export function parseStoreState<Res>(
         ...storeState,
         error: storeState?.error || undefined,
         lastUpdated: storeState?.lastUpdated || undefined,
-        executed: !lazy && !storeState ? true : validStoreState.executed,
+        executed: !lazy && !storeState ? false : validStoreState.executed,
         success: storeState?.success || undefined,
         data,
         /**

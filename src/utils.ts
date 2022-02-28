@@ -20,7 +20,7 @@ export function parseError(error: any) {
 
 export function parseStoreState<Res>(
     storeState: StoreState<unknown> | undefined,
-    lazy: boolean
+    lazy = true
 ): StoreState<Res> {
     const validStoreState = storeState || getDefaultState();
 

@@ -70,7 +70,7 @@ export default function getRootReducer() {
                                 ) {
                                     return getDefaultState();
                                 }
-                                return method;
+                                return { ...method, executed: false };
                             }, url),
                         api
                     ),

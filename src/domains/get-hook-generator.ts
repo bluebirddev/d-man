@@ -46,11 +46,13 @@ export default function getHookGenerator(
             uuid
         )<Res, Req>(action, options);
 
+        const lazy = options.lazy !== false;
+
         const storeState = useSelector(get.selector);
 
         const validStoreState = parseStoreState<Res>(
             storeState,
-            options.lazy === true
+            lazy
         );
 
         const { dispatch } = store;
@@ -99,11 +101,11 @@ export default function getHookGenerator(
          * If mounted, and not lazy -> refresh
          */
         useEffect(() => {
-            if (!options.lazy && !storeState?.executed) {
+            if (!lazy) {
                 get.execute();
             }
             // eslint-disable-next-line react-hooks/exhaustive-deps
-        }, [options.lazy, get.execute, storeState]);
+        }, [lazy]);
 
         /**
          * Triggers interval.

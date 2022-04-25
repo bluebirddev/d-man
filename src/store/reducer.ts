@@ -47,8 +47,17 @@ export const getDefaultState = () => ({
     lastUpdated: getUnixTime(new Date())
 });
 
-export default function getRootReducer(localStorageKey: string) {
-    const cachedState = localStorage.getItem(localStorageKey);
+export default function getRootReducer(
+    localStorageKey: string,
+    disableLocalStorage?: boolean
+) {
+    const cachedState = (() => {
+        if (disableLocalStorage) {
+            localStorage.removeItem(localStorageKey);
+            return null;
+        }
+        return localStorage.getItem(localStorageKey);
+    })();
 
     const initialState: RootState = cachedState
         ? (JSON.parse(cachedState) as RootState)

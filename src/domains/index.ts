@@ -23,7 +23,6 @@ export type DomainOptions = {
      * This will execute before every rest request to obtain the latest auth token.
      */
     getAuthToken?: (state: RootState) => string | undefined;
-
     /**
      * Axios interceptors
      */

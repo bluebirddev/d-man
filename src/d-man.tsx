@@ -17,6 +17,10 @@ export type Options<T> = {
      */
     localStorageKey?: string;
     /**
+     * Do not use local storage.
+     */
+    disableLocalStorage?: boolean;
+    /**
      * If passing only one rest client.
      */
     domain?: DomainOptions;
@@ -36,7 +40,7 @@ export function createDMan<T>(options: Options<T>): DMan<T> {
      */
     const localStorageKey = options.localStorageKey || uuidv4();
 
-    const store = setupStore(localStorageKey);
+    const store = setupStore(localStorageKey, options.disableLocalStorage);
 
     if (!options.domain && !options.domains) {
         throw new Error('You must specify either domain or domains!');
